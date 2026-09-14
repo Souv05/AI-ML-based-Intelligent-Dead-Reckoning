@@ -1,0 +1,20 @@
+{
+  "what_nhc_solved": [
+    "Lateral velocity: median |v_lateral| reduced from 0.248 m/s (no_nhc) to 3.4e-11 m/s (with_nhc) -- effectively exact, confirming NHC's designed mechanism works on the corrected (constant-velocity) process model, unlike Step14's structurally-inert version.",
+    "Numerical stability: all 97 position-discontinuity failure events across 10 unique cases (concentrated at 90-120s outages) are eliminated entirely with NHC active.",
+    "NHC improves FDE in 49/72 cases (68%) when isolated against an otherwise-identical no-NHC run, mainly by preventing runaway divergence at long outages."
+  ],
+  "what_nhc_did_not_solve": [
+    "Heading error: with_nhc mean heading error (31.74 deg) is statistically indistinguishable from Step14 (31.37 deg); NHC's isolated median effect on heading error is 0.060 deg -- not a meaningful change.",
+    "Aggregate FDE/drift: with_nhc median FDE (250.9 m) does not beat Step14's (229.9 m) -- it converges to roughly the same level rather than exceeding it.",
+    "SIH <10% drift pass rate is unchanged at 4.17% (3/72) across all three arms.",
+    "In 23/72 cases (32%), NHC's isolated effect on FDE is negative -- forcing lateral velocity to zero is not uniformly beneficial when the unconstrained trajectory happens to drift toward, rather than away from, ground truth."
+  ],
+  "main_remaining_bottleneck": "Heading error, uncorrected during the GNSS outage span (no update touches absolute heading once GNSS/course updates stop), compounding with outage duration -- the strongest and most consistent driver of FDE/drift across every arm.",
+  "what_to_investigate_next": [
+    "A heading-observable measurement usable during outages (e.g. ZUPT-derived heading constraints, magnetometer-based heading where reliable, or map-matching) -- NHC structurally cannot supply this, since it observes lateral-velocity consistency, not absolute heading.",
+    "Whether the AI forward-speed measurement's own error (mean_ai_innovation_mps has non-trivial spread, std ~0.30 m/s) contributes to compounding drift independent of NHC.",
+    "Sequence-specific dynamics for Vta28 (hardest by median FDE and highest heading error at 48-56 deg across all arms) -- worth checking whether it involves sharper turns or longer sustained maneuvers than the other three sequences.",
+    "Per the roadmap, this is exactly what 15F (optional ZUPT) and Phase 16's outage-detection work are positioned to address -- this analysis does not itself propose a fix."
+  ]
+}

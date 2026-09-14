@@ -1,0 +1,41 @@
+{
+  "step": "16D",
+  "timestamp": "2026-09-10T19:42:45.537705",
+  "decision": "GRU_v2_RECOMMENDED",
+  "recommended_model": "GRU_v2",
+  "recommended_experiment": "GRU2-E05c-T60",
+  "checkpoint": "D:\\SIH 2026\\outputs\\step16a\\gru_v2_best.pt",
+  "rationale": {
+    "primary": "GRU v2 is the ONLY model with an authoritative downstream navigation evaluation inside the actual 15C EKF + active NHC pipeline (72-case, 4 held-out test sequences). Median FDE 186.26 m vs 250.87 m for GRU v1 (-25.8%), Wilcoxon p=5.1e-5. Wins 50/72, loses 22/72.",
+    "ai_metrics": "GRU v2 achieves test RMSE 4.4016 vs TCN-GRU 5.7270 and Transformer 5.4223 \u2014 best velocity accuracy on the held-out test set.",
+    "caveat": "SIH pass rate (3/72, 4.2%) and heading drift (36.8%) are unchanged vs GRU v1. The navigation bottleneck is heading accuracy, not speed accuracy. GRU v2 reduces median FDE but does not solve the underlying heading problem.",
+    "compute": "GRU v2 has 153,729 parameters (exceeds 100k edge budget) and ~604 KB disk. TCN-GRU (17,434 params, 78.6 KB) and Transformer (19,746 params, 125 KB) are both edge-budget eligible and faster on single-CPU inference, but lack authoritative nav evaluation \u2014 their nav benefit is unquantified.",
+    "why_not_tcn_or_transformer": "Neither TCN-GRU nor Transformer ran through the 72-case 15C+NHC nav evaluation in Steps 16B/16C. Selecting one based on test RMSE alone would be speculation. Decision rule (spec \u00a77): existing downstream nav evidence takes priority over all other criteria."
+  },
+  "alternatives_evaluated": [
+    {
+      "model": "TCN_GRU",
+      "status": "EVALUATED_AI_ONLY",
+      "test_RMSE": 5.727047786975912,
+      "downstream_nav": "NOT_EVALUATED",
+      "recommendation": "Keep as evaluated alternative; suitable for edge deployment if nav is evaluated in future."
+    },
+    {
+      "model": "Transformer",
+      "status": "EVALUATED_AI_ONLY",
+      "test_RMSE": 5.422254302029522,
+      "downstream_nav": "NOT_EVALUATED",
+      "recommendation": "Keep as evaluated alternative; fastest single-CPU inference (1.17ms)."
+    }
+  ],
+  "integrity_flags": {
+    "gru_v1_checkpoint_modified": false,
+    "gru_v2_retrained": false,
+    "test_set_used_for_selection": false,
+    "split_reshuffled": false,
+    "outage_cases_regenerated": false,
+    "metrics_recomputed": false
+  },
+  "next_step": "STOP. Do NOT start 16E automatically. Wait for user review and approval of GRU v2 before freezing.",
+  "authoritative_result": true
+}

@@ -1,0 +1,15 @@
+experiment_id,model_type,window_size,hidden_size,num_layers,loss,learning_rate,scheduler,gradient_clipping,dropout,best_epoch,train_loss,val_loss,val_rmse,val_mae,val_r2,parameter_count,model_size_mb,inference_latency_ms,checkpoint_path
+GRU_v1_frozen_reference,GRU,20,128,2,mse,0.0005,none,5.0,0.2,2,,49.894441,7.0636,5.427732,0.45255,0,0.5903,0.005424,D:\SIH 2026\outputs\step12d\final\gru_best.pt
+GRU2-E00b-base,GRU,20,128,2,mse,0.0005,none,5.0,0.2,2,0.215618,52.41524,7.239837,5.491558,0.424891,153729,0.5899,0.005823,D:\SIH 2026\outputs\step16a\checkpoints\GRU2-E00b-base.pt
+GRU2-E01a-huber1.0,GRU,20,128,2,huber(d=1.0),0.0005,none,5.0,0.2,4,0.105618,53.18556,7.292843,5.426305,0.416439,153729,0.59,0.005484,D:\SIH 2026\outputs\step16a\checkpoints\GRU2-E01a-huber1.0.pt
+GRU2-E01b-huber2.0,GRU,20,128,2,huber(d=2.0),0.0005,none,5.0,0.2,3,0.112382,49.527053,7.037546,5.264581,0.456581,153729,0.59,0.005479,D:\SIH 2026\outputs\step16a\checkpoints\GRU2-E01b-huber2.0.pt
+GRU2-E02-plateau,GRU,20,128,2,mse,0.0005,plateau,5.0,0.2,5,0.194509,46.398713,6.81166,5.18777,0.490905,153729,0.59,0.005482,D:\SIH 2026\outputs\step16a\checkpoints\GRU2-E02-plateau.pt
+GRU2-E03-clip1.0,GRU,20,128,2,mse,0.0005,none,1.0,0.2,2,0.214101,53.473583,7.312563,5.657097,0.413279,153729,0.59,0.005472,D:\SIH 2026\outputs\step16a\checkpoints\GRU2-E03-clip1.0.pt
+GRU2-E04-patience10,GRU,20,128,2,mse,0.0005,none,5.0,0.2,4,0.172736,50.509384,7.106995,5.344963,0.445802,153729,0.59,0.00571,D:\SIH 2026\outputs\step16a\checkpoints\GRU2-E04-patience10.pt
+GRU2-E05a-T20,GRU,20,128,2,mse,0.0005,none,5.0,0.2,5,0.193527,49.136569,7.009748,5.283732,0.460865,153729,0.5899,0.005719,D:\SIH 2026\outputs\step16a\checkpoints\GRU2-E05a-T20.pt
+GRU2-E05b-T40,GRU,40,128,2,mse,0.0005,none,5.0,0.2,4,0.157548,50.142732,7.081153,5.145204,0.449744,153729,0.5899,0.008532,D:\SIH 2026\outputs\step16a\checkpoints\GRU2-E05b-T40.pt
+GRU2-E05c-T60,GRU,60,128,2,mse,0.0005,none,5.0,0.2,2,0.147586,44.834498,6.695857,4.817945,0.507886,153729,0.5899,0.010792,D:\SIH 2026\outputs\step16a\checkpoints\GRU2-E05c-T60.pt
+GRU2-E06a-h64l1,GRU,20,64,1,mse,0.0005,none,5.0,0.0,7,0.22123,50.630709,7.115526,5.34611,0.444471,15041,0.0598,0.003211,D:\SIH 2026\outputs\step16a\checkpoints\GRU2-E06a-h64l1.pt
+GRU2-E06b-h96l1,GRU,20,96,1,mse,0.0005,none,5.0,0.0,5,0.21999,50.242209,7.088174,5.470874,0.448734,31777,0.1237,0.002675,D:\SIH 2026\outputs\step16a\checkpoints\GRU2-E06b-h96l1.pt
+GRU2-E06c-h64l2,GRU,20,64,2,mse,0.0005,none,5.0,0.1,2,0.237327,50.508379,7.106925,5.347449,0.445813,40001,0.1561,0.002947,D:\SIH 2026\outputs\step16a\checkpoints\GRU2-E06c-h64l2.pt
+GRU2-E07-tcngru,TCN-GRU,20,64,1,mse,0.0005,none,5.0,0.0,5,0.220188,49.017718,7.001265,4.966622,0.462169,23169,0.0918,0.002285,D:\SIH 2026\outputs\step16a\checkpoints\GRU2-E07-tcngru.pt

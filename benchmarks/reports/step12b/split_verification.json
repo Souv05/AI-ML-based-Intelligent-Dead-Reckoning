@@ -1,0 +1,63 @@
+{
+  "sequences_per_split": {
+    "train": [
+      "M",
+      "S1",
+      "S2",
+      "V-Vfa01",
+      "Vta01a",
+      "Vta01b",
+      "Vta02",
+      "Vta04",
+      "Vta06",
+      "Vta07",
+      "Vta10",
+      "Vta12",
+      "Vta14",
+      "Vta15",
+      "Vta16",
+      "Vta17",
+      "Vta21",
+      "Vta22",
+      "Vta23",
+      "Vta24",
+      "Vta26",
+      "Vta29",
+      "Vta30",
+      "Vtb02",
+      "Vtb03",
+      "Vtb05",
+      "Vtb08",
+      "Vw04",
+      "Vw05",
+      "Vw10",
+      "Vw11",
+      "Vw12",
+      "Vw14a",
+      "Vw14b",
+      "Vw14c"
+    ],
+    "validation": [
+      "S3a",
+      "S3b",
+      "S3c",
+      "V-Vfa02",
+      "Vw03",
+      "Vw16a",
+      "Vw16b"
+    ],
+    "test": [
+      "Vta08",
+      "Vta28",
+      "Vtb01",
+      "Vw02"
+    ]
+  },
+  "window_counts": {
+    "train": 625900,
+    "validation": 146853,
+    "test": 86331
+  },
+  "train_val_test_disjoint": true,
+  "split_method": "sequence-wise (whole drives) from manifest['split']; drive sub-segments grouped; built by scripts/prepare_dataset.py with split_seed=26168"
+}

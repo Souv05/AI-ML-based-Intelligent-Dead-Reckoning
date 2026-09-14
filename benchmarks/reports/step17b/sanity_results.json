@@ -1,0 +1,42 @@
+{
+  "n_pass": 7,
+  "n_total": 7,
+  "all_pass": true,
+  "tests": {
+    "test1_all_healthy": {
+      "description": "100% HEALTHY under nominal signal",
+      "pass": true,
+      "detail": "HEALTHY frac=1.000"
+    },
+    "test2_low_sats_outage": {
+      "description": "n_sats=2 -> OUTAGE",
+      "pass": true,
+      "detail": "OUTAGE frac=1.000"
+    },
+    "test3_high_hdop_outage": {
+      "description": "hdop=20 -> OUTAGE",
+      "pass": true,
+      "detail": "OUTAGE frac=1.000"
+    },
+    "test4_marginal_sats_degraded": {
+      "description": "n_sats=4 -> DEGRADED",
+      "pass": true,
+      "detail": "DEGRADED frac=1.000"
+    },
+    "test5_frozen_fix_detected": {
+      "description": "frozen position -> flagged",
+      "pass": true,
+      "detail": "non-healthy frac after freeze=1.000"
+    },
+    "test6_position_jump_detected": {
+      "description": "200m jump -> flagged",
+      "pass": true,
+      "detail": "flagged=True"
+    },
+    "test7_score_monotonic": {
+      "description": "health_score non-decreasing in n_sats",
+      "pass": true,
+      "detail": "scores=[np.float64(0.0), np.float64(0.333), np.float64(1.0), np.float64(1.0), np.float64(1.0), np.float64(1.0)]"
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "step": "17D",
+  "phase": "17 - GNSS-to-DR switch controller tuning",
+  "tuned_n_confirm": 2,
+  "tuned_g_max_degraded": 0.0,
+  "default_n_confirm": 5,
+  "default_g_max_degraded": 0.35,
+  "test_median_fde_improvement_pct": 0.03844854380464112,
+  "results_authoritative": true
+}

@@ -1,0 +1,72 @@
+{
+  "step": "16A_new",
+  "purpose": "GRU v2 downstream revalidation inside actual 15C + active NHC",
+  "seed": 42,
+  "frozen_models": {
+    "gru_v1": {
+      "path": "D:\\SIH 2026\\outputs\\step12d\\final\\gru_best.pt",
+      "md5": "27e1dd1eeadce6bce4a30efa6d898b58",
+      "window_T": 20
+    },
+    "gru_v2": {
+      "path": "D:\\SIH 2026\\outputs\\step16a\\gru_v2_best.pt",
+      "md5": "4761355bb0764145be37b13fd619533b",
+      "window_T": 60,
+      "hidden_size": 128,
+      "num_layers": 2,
+      "dropout": 0.2
+    }
+  },
+  "navigation_engine": {
+    "implementation": "actual 15C EKF5_15C (constant-velocity predict; NO hard assignment)",
+    "state": [
+      "E",
+      "N",
+      "vE",
+      "vN",
+      "psi"
+    ],
+    "ai_measurement": "z=v_GRU, h=vE*sin(psi)+vN*cos(psi), H=[0,0,sin,cos,vE*cos-vN*sin]",
+    "nhc_measurement": "z=0, h=vE*cos(psi)-vN*sin(psi), H=[0,0,cos,-sin,-(vE*sin+vN*cos)]",
+    "NHC_STD_MPS": 1.0,
+    "R_NHC": 1.0,
+    "sig_AI_mps": 5.070742,
+    "Q_psd_diag": [
+      8.0,
+      8.0,
+      1.0,
+      1.0,
+      0.004873878716587337
+    ],
+    "P0_diag": [
+      25.0,
+      25.0,
+      4.0,
+      4.0,
+      0.12184696791468343
+    ],
+    "sig_gnss_m": 5.0,
+    "zupt": "NOT applied in the primary arms (15F: no material aggregate benefit)"
+  },
+  "outage_cases": "D:\\SIH 2026\\outputs\\step14_ekf\\final\\outage_cases.csv",
+  "arms": {
+    "A": "GRU v1 + 15C EKF + NHC",
+    "B": "GRU v2 + 15C EKF + NHC"
+  },
+  "firewall": {
+    "gru_v2_retrained": false,
+    "gru_v2_tuned": false,
+    "checkpoint_overwritten": false,
+    "T_changed": false,
+    "scaler_changed": false,
+    "Q_P0_changed": false,
+    "ai_noise_changed": false,
+    "nhc_changed": false,
+    "outage_cases_regenerated": false,
+    "model_selected_using_test": false,
+    "test_used_for": "held-out evaluation only (GRU v2 already frozen)"
+  },
+  "relation_to_old_phase16": "Old 16A/16D used the Step-14 EKF with NO active NHC; old 17B reconstructed 15C. Those are HISTORICAL references only. This result is produced with the actual 15C + active NHC.",
+  "python": "3.9.25",
+  "platform": "Windows-10-10.0.26200-SP0"
+}

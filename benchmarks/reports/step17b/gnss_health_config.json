@@ -1,0 +1,12 @@
+{
+  "min_sats_healthy": 6,
+  "min_sats_outage": 3,
+  "hdop_healthy": 2.0,
+  "hdop_outage": 10.0,
+  "kinematic_jump_mps": 8.0,
+  "kinematic_window_s": 1.0,
+  "frozen": true,
+  "selected_on": "physical/documented constants, sanity-checked on validation only",
+  "validation_mean_f1": 0.8645999999999999,
+  "validation_mean_outage_recall": 1.0
+}

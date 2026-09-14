@@ -1,0 +1,36 @@
+{
+  "seed": 42,
+  "target": {
+    "name": "forward_speed",
+    "unit": "m/s",
+    "source": "reference vehicle speed (Velocity (km/hr) / 3.6) at window-end"
+  },
+  "features": [
+    "acc_x",
+    "acc_y",
+    "acc_z",
+    "gyro_x",
+    "gyro_y",
+    "gyro_z",
+    "mag_x",
+    "mag_y",
+    "mag_z",
+    "roll",
+    "pitch",
+    "yaw"
+  ],
+  "window_len": 20,
+  "n_features": 12,
+  "env": {
+    "python_version": "3.9.25",
+    "numpy_version": "2.0.2",
+    "pandas_version": "2.2.3",
+    "sklearn_version": "1.6.1",
+    "torch_version": null,
+    "cupy_version": null,
+    "cuml_version": null,
+    "device": "cpu",
+    "random_forest_backend": "sklearn_cpu",
+    "seed": 42
+  }
+}

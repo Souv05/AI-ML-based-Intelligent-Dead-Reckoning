@@ -1,0 +1,7 @@
+{
+  "sequence_appears_once": true,
+  "drive_subsegments_grouped": true,
+  "no_forbidden_input_feature": true,
+  "source_leakage_report": "artifacts/leakage_report.md",
+  "status": "PASS"
+}

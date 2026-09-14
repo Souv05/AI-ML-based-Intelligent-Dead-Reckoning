@@ -1,0 +1,17 @@
+{
+  "full_prepared_dataset_used": true,
+  "all_test_sequences_evaluated": true,
+  "test_sequences": [
+    "Vta08",
+    "Vta28",
+    "Vtb01",
+    "Vw02"
+  ],
+  "truncated": false,
+  "random_test_sampling": false,
+  "frozen_gru": true,
+  "gru_retrained": false,
+  "ekf_used": false,
+  "gnss_used_during_outage": false,
+  "results_authoritative": true
+}

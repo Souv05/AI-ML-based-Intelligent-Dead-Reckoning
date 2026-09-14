@@ -1,0 +1,16 @@
+{
+  "n_bootstrap": 10000,
+  "n_paired_cases": 72,
+  "ai_win_rate_point_pct": 50.0,
+  "ai_win_rate_95ci_pct": [
+    38.88888888888889,
+    61.111111111111114
+  ],
+  "median_fde_gap_point_m": -0.3779612046740217,
+  "median_fde_gap_95ci_m": [
+    -31.638608935989545,
+    39.09297740899977
+  ],
+  "ci_excludes_50pct_win_rate": false,
+  "ci_excludes_zero_median_gap": false
+}

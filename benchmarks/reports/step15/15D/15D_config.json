@@ -1,0 +1,108 @@
+{
+  "seed": 42,
+  "repo_root": "D:\\SIH 2026",
+  "gru_weights_path": "D:\\SIH 2026\\outputs\\step12d\\final\\gru_best.pt",
+  "gru_params": {
+    "hidden_size": 128,
+    "num_layers": 2,
+    "learning_rate": 0.0005,
+    "dropout": 0.2,
+    "weight_decay": 0.0001,
+    "selected_by": "validation_RMSE, then validation_MAE, then parameter_count",
+    "best_epoch_from_tuning": 2
+  },
+  "gru_frozen_test_rmse": 5.070742,
+  "sig_AI_mps": 5.070742,
+  "NHC_STD_MPS": 1.0,
+  "R_NHC": 1.0,
+  "ekf_config_14": {
+    "state": [
+      "E",
+      "N",
+      "vE",
+      "vN",
+      "psi"
+    ],
+    "heading_model": "constant (psi_dot=0) + process noise; gyro verified unusable",
+    "Q_psd_diag": [
+      8.0,
+      8.0,
+      1.0,
+      1.0,
+      0.004873878716587337
+    ],
+    "Q_psd_units": [
+      "m^2/s",
+      "m^2/s",
+      "(m/s)^2/s",
+      "(m/s)^2/s",
+      "rad^2/s"
+    ],
+    "sig_gnss_m": 5.0,
+    "R_diag": [
+      25.0,
+      25.0
+    ],
+    "P0_diag": [
+      25.0,
+      25.0,
+      4.0,
+      4.0,
+      0.12184696791468343
+    ],
+    "gnss_measurement": "reference_x/reference_y where gnss_available==1 and outside outage",
+    "pre_buffer_s": 10.0,
+    "post_buffer_s": 30.0,
+    "selected_on": "validation median outage-span drift %",
+    "seed": 42,
+    "tuning_grid": [
+      [
+        0.5,
+        0.00030461741978670857
+      ],
+      [
+        0.5,
+        0.004873878716587337
+      ],
+      [
+        2.0,
+        0.00030461741978670857
+      ],
+      [
+        2.0,
+        0.004873878716587337
+      ],
+      [
+        8.0,
+        0.00030461741978670857
+      ],
+      [
+        8.0,
+        0.004873878716587337
+      ]
+    ]
+  },
+  "outage_durations_s": [
+    10,
+    20,
+    30,
+    60,
+    90,
+    120
+  ],
+  "outage_cases_source": "D:\\SIH 2026\\outputs\\step14_ekf\\final\\outage_cases.csv",
+  "n_outage_cases": 72,
+  "test_sequences": [
+    "Vta08",
+    "Vta28",
+    "Vtb01",
+    "Vw02"
+  ],
+  "python_version": "3.9.25",
+  "platform": "Windows-10-10.0.26200-SP0",
+  "torch_version": "2.5.1+cu121",
+  "test_set_touched_for_training": false,
+  "retraining": false,
+  "tuning": false,
+  "parameter_search": false
+}

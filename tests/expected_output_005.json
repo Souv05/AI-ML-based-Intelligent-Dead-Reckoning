@@ -1,0 +1,10 @@
+{
+  "vector_id": 5,
+  "sequence_id": "Vtb01",
+  "speed_normalised": -1.44880164,
+  "speed_mps": 0.448231,
+  "ground_truth_mps": 0.028889,
+  "abs_error_mps": 0.419342,
+  "tolerance_mps": 0.05,
+  "note": "Android output must match speed_mps within tolerance_mps"
+}

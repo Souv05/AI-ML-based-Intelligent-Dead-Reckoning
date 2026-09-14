@@ -1,0 +1,28 @@
+{
+  "test_bias_mean_residual_ms": 4.0216779708862305,
+  "interpretation": "under-prediction on average",
+  "mae_by_speed_bucket_ms": {
+    "stationary (<0.5 m/s)": [
+      1.959271788597107,
+      5327
+    ],
+    "low (0.5-5 m/s)": [
+      4.228594779968262,
+      3857
+    ],
+    "cruise (5-15 m/s)": [
+      2.4801206588745117,
+      23719
+    ],
+    "high (>=15 m/s)": [
+      7.783258438110352,
+      53428
+    ]
+  },
+  "mae_high_dynamics_windows_ms": 5.2898945808410645,
+  "mae_steady_windows_ms": 5.980799674987793,
+  "best_test_sequence": "Vta08",
+  "worst_test_sequence": "Vw02",
+  "test_rmse_improvement_vs_baseline0_pct": 14.39,
+  "test_rmse_improvement_vs_rf12a_pct": 11.03
+}

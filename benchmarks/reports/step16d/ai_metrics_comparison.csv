@@ -1,0 +1,4 @@
+model,experiment_id,val_RMSE_mps,test_RMSE_mps,test_MAE_mps,test_R2,test_MedianAE_mps,n_test_windows,window_T,downstream_nav_evaluated
+GRU_v2,GRU2-E05c-T60,6.6959,4.4016,3.432,0.6755,2.8676,86171.0,60,True
+TCN_GRU,TCNGRU-E03c-deeper-T40,7.5182,5.727,4.5538,0.4526,3.8849,,40,False
+Transformer,Transformer-E03a-narrow-T20,7.4851,5.4223,4.2183,0.5094,3.4045,,20,False

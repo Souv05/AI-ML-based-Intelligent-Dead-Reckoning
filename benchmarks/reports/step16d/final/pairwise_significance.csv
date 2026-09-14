@@ -1,0 +1,4 @@
+Model A,Model B,metric,n,statistic,p_value,Significant (p<0.05)
+16A GRU v2,16B Hybrid TCN-GRU,nav_FDE_m_paired,72,600.0,6.156018357828606e-05,True
+16A GRU v2,16C Lightweight Transformer,nav_FDE_m_paired,72,612.0,8.168263606729995e-05,True
+16B Hybrid TCN-GRU,16C Lightweight Transformer,nav_FDE_m_paired,72,1010.0,0.08801649193423064,False

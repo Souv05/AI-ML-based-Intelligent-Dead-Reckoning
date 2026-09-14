@@ -1,0 +1,30 @@
+{
+  "step": "16D",
+  "timestamp": "2026-09-10T19:42:46.576830",
+  "authoritative_result": true,
+  "recommended_model": "GRU_v2",
+  "decision": "GRU_v2_RECOMMENDED",
+  "integrity": {
+    "gru_v1_checkpoint_modified": false,
+    "gru_v2_retrained": false,
+    "split_reshuffled": false,
+    "test_used_for_selection": false,
+    "outage_cases_regenerated": false,
+    "metrics_recomputed": false
+  },
+  "outputs": [
+    "final_ai_model_comparison.csv",
+    "ai_metrics_comparison.csv",
+    "computational_comparison.csv",
+    "speed_regime_comparison.csv",
+    "model_selection_summary.json",
+    "model_comparison.png",
+    "speed_regime_comparison.png",
+    "computational_comparison.png",
+    "STEP16D_REPORT.md",
+    "authoritative_status_16d.json"
+  ],
+  "next_step": "STOP \u2014 await user review before proceeding to 16E",
+  "platform": "win32",
+  "python": "3.9.25"
+}

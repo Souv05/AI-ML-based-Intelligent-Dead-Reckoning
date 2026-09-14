@@ -1,0 +1,5 @@
+sequence_id,n_rows,n_stationary_rows,stationary_frac,roll_tilt_deg,pitch_tilt_deg,yaw_offset_deg,yaw_circ_std_deg,confidence_tilt,confidence_yaw,confidence_overall,n_gnss_yaw_samples,heading_mae_before_deg,heading_mae_after_deg,heading_rmse_after_deg,heading_median_ae_after_deg,heading_p95_ae_after_deg,heading_std_after_deg,roll_std_raw_deg,pitch_std_raw_deg,status
+Vta08,3676,1013,0.2756,-0.3747,-1.338,163.8203,138.7303,0.8641,0.5,0.6092,2149,93.3262,85.5389,96.8628,90.8453,161.9071,96.7184,114.0094,1.736,ALIGNED
+Vta28,4210,465,0.1105,-0.8241,0.6606,-178.4733,111.0572,0.8621,0.5,0.6086,2556,102.0501,77.8782,100.5925,59.681,175.8664,100.249,106.2135,3.1444,ALIGNED
+Vtb01,32459,2128,0.0656,-0.9399,-2.4255,-170.2585,88.4707,0.8713,0.5085,0.6173,22312,112.2539,67.1648,85.7528,49.8005,165.9795,85.6199,120.6421,1.7839,ALIGNED
+Vw02,52712,3485,0.0661,-1.3316,-0.7149,151.5663,27.5224,0.8632,0.8471,0.8519,36565,144.7481,20.7266,28.1682,15.6578,57.9075,28.1508,76.9981,1.5827,ALIGNED

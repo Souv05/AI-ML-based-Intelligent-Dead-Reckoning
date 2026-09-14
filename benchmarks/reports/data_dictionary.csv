@@ -1,0 +1,54 @@
+source_file,column_name,datatype,non_null_count,missing_count,min,max,mean,std,likely_unit,semantic_role
+S-M.csv,GPS LATITUDE (degrees),float64,105974,0,52.3579,52.4792,52.4244,0.0313,deg,gnss_input_reference
+S-M.csv, GPS LONGITUDE (degrees),float64,105974,0,-1.5887,-1.3785,-1.5025,0.0454,deg,gnss_input_reference
+S-M.csv, GPS ALTITUDE (m),float64,105974,0,126.91,196.32,158.4001,15.568,m,gnss_aux
+S-M.csv, GPS SPEED (Kmh),float64,105974,0,0.0,27.02,9.966,5.5547,m/s (label says Kmh),gnss_derived_speed
+S-M.csv, GPS ACCURACY (m),float64,105974,0,2.0,13.6175,3.1833,0.9973,m,gnss_quality
+S-M.csv, GPS ORIENTATION (Â°),float64,105974,0,0.03,360.0,183.7315,104.9339,deg,gnss_course
+S-M.csv,GPS SATELLITES IN RANGE,object,105974,0,,,,,count,gnss_quality
+S-M.csv, TIME SINCE START (ms),int64,105974,0,10.0,6175975.0,2724125.2312,1648479.294,ms,clock_unreliable
+S-M.csv, DATE (YYYY-MO-DD HH-MI-SS_SSS),object,105974,0,,,,,timestamp,clock_master
+S-M.csv, ACCELEROMETER X (m/s²) ,float64,105974,0,-39.6496,18.2363,-0.1738,1.2461,m/s^2,imu_input
+S-M.csv, ACCELEROMETER Y (m/s²),float64,105974,0,-39.3612,12.8086,-0.0702,1.274,m/s^2,imu_input
+S-M.csv, ACCELEROMETER Z (m/s²),float64,105974,0,-19.5769,59.4461,9.8542,0.6296,m/s^2,imu_input
+S-M.csv, GRAVITY X (m/s²),float64,105974,0,-4.259,2.1784,-0.0001,0.027,m/s^2,imu_aux
+S-M.csv, GRAVITY Y (m/s²),float64,105974,0,-6.3672,2.6732,-0.0002,0.0337,m/s^2,imu_aux
+S-M.csv, GRAVITY Z (m/s²),float64,105974,0,7.0634,9.8067,9.8065,0.0098,m/s^2,imu_aux
+S-M.csv, GYROSCOPE Yaw (rad/s),float64,105974,0,-9.8108,5.8733,-0.002,0.0944,rad/s,imu_input
+S-M.csv, GYROSCOPE Pitch (rad/s),float64,105974,0,-8.4485,12.6635,-0.0184,0.1745,rad/s,imu_input
+S-M.csv, GYROSCOPE Roll (rad/s),float64,105974,0,-3.8472,9.7169,0.0012,0.0777,rad/s,imu_input
+S-M.csv, MAGNETIC FIELD X (Î¼T),float64,105974,0,-52.5,58.0,-20.5284,14.0572,uT,imu_input
+S-M.csv, MAGNETIC FIELD Y (Î¼T),float64,105974,0,-107.62,35.31,-30.9563,3.5674,uT,imu_input
+S-M.csv, MAGNETIC FIELD Z (Î¼T),float64,105974,0,-64.62,58.25,13.3098,12.9544,uT,imu_input
+S-M.csv, ORIENTATION (Yaw) (Â°),float64,105974,0,0.0,360.0,243.705,115.7653,deg,orientation_input
+S-M.csv, ORIENTATION (Pitch) (Â°),float64,105974,0,-89.93,73.64,-81.7671,3.0999,deg,orientation_input
+S-M.csv, ORIENTATION (Roll ) (Â°),float64,105974,0,-180.0,180.0,-127.2129,87.5366,deg,orientation_input
+V-M.csv,No of GPS Satellites Available,float64,105974,0,0.0,140.0,124.6334,40.1645,count,gnss_quality
+V-M.csv, Time Since Start of Day (seconds),float64,105974,0,29608.4,40205.7,34907.05,3059.2203,s,clock_master
+V-M.csv, Latitude (degrees),float64,105974,0,52.3578,52.4793,52.4244,0.0313,deg,reference_position
+V-M.csv, Longitude (degrees),float64,105974,0,-1.5887,-1.3784,-1.5025,0.0454,deg,reference_position
+V-M.csv, Velocity (km/hr),float64,105974,0,0.0,100.688,35.7057,20.3998,km/h,reference_speed
+V-M.csv, Heading (degrees),float64,105974,0,0.001,359.999,184.3991,104.9223,deg,reference_heading
+V-M.csv, Height (km),float64,105974,0,71.22,148.76,107.1475,16.1603,m (label says km),reference_aux
+V-M.csv, Vertical velocity (km/hr),float64,105974,0,-2.33,3.02,0.0119,0.2931,km/h,reference_speed
+V-M.csv, Sample period (seconds),float64,105974,0,0.099,0.2,0.1,0.0003,s,clock
+V-M.csv, Steering Angle (degrees),float64,105974,0,0.0,662.0,210.2473,67.0387,deg,vehicle_only_not_input
+V-M.csv, Wheel Speed Front Left (rad/sec),float64,105974,0,0.0,100.83,36.0734,20.451,rad/s,vehicle_only_not_input
+V-M.csv, Wheel Speed Front Right (rad/sec),float64,105974,0,0.0,100.79,35.9632,20.4769,rad/s,vehicle_only_not_input
+V-M.csv, Wheel Speed Rear Left (rad/sec),float64,105974,0,0.0,100.79,35.9838,20.451,rad/s,vehicle_only_not_input
+V-M.csv, Wheel Speed Rear Right (rad/sec),float64,105974,0,0.0,100.35,35.7918,20.426,rad/s,vehicle_only_not_input
+V-M.csv, Yaw Rate (deg/sec),float64,105974,0,-66.0,49.8,-1.2834,8.9557,deg/s,vehicle_only_reference
+V-M.csv, Indicated Vehicle Speed (km/hr),float64,105974,0,0.0,100.81,36.0165,20.4595,km/h,vehicle_only_not_input
+V-M.csv, Indicated Longitudinal Acceleration (g),float64,105974,0,-1.0108,0.4396,-0.0036,0.0836,g,vehicle_only_reference
+V-M.csv, Indicated Lateral Acceleration (g),float64,105974,0,-0.9007,0.8701,-0.0171,0.1313,g,vehicle_only_reference
+V-M.csv, Handbrake (0 or 1),float64,105974,0,0.0,1.0,0.0159,0.1251,0/1,vehicle_only_not_input
+V-M.csv, Gear Requested (Number fof gear employed 1-5),float64,105974,0,0.0,14.0,3.7742,1.7144,gear 1-5,vehicle_only_not_input
+V-M.csv, Gear (Number fof gear employed 1-5),float64,105974,0,0.0,5.0,2.9323,0.4449,gear 1-5,vehicle_only_not_input
+V-M.csv, Engine Speed (rev/min),float64,105974,0,738.0,6332.0,1538.4889,496.912,rev/min,vehicle_only_not_input
+V-M.csv, Coolant Temperature (degrees),float64,105974,0,48.0,102.0,88.0467,5.5382,degC,vehicle_only_not_input
+V-M.csv, Clutch Position (0 or 1),float64,105974,0,0.0,0.0,0.0,0.0,0/1,vehicle_only_not_input
+V-M.csv, Brake Pressure (psi),float64,105974,0,-1.46,192.85,2.2172,7.6886,psi,vehicle_only_not_input
+V-M.csv, Brake Position (0 or 1),float64,105974,0,0.0,1.0,0.2138,0.41,0/1,vehicle_only_not_input
+V-M.csv, Battery Voltage (volts),float64,105974,0,12.8,14.4,13.8984,0.201,V,vehicle_only_not_input
+V-M.csv, Air Temperature (degrees),float64,105974,0,13.5,17.25,15.0735,1.0044,degC,vehicle_only_not_input
+V-M.csv, Accelerator Pedal Position (0 or 1),float64,105974,0,0.0,99.0,8.4865,11.2962,0/1,vehicle_only_not_input

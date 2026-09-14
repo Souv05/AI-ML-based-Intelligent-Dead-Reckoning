@@ -1,0 +1,46 @@
+{
+  "1_zupt_improves_median_FDE": false,
+  "   median_FDE_A_m": 250.87353329356057,
+  "   median_FDE_B_m": 250.87353329356057,
+  "   median_FDE_delta_m": 0.0,
+  "   wilcoxon_FDE_stat_p": [
+    2.0,
+    0.009344113002204883
+  ],
+  "2_zupt_improves_drift": false,
+  "   median_drift_A_pct": 36.42924226892568,
+  "   median_drift_B_pct": 36.42924226892568,
+  "3_zupt_improves_long_outages_ge90s": false,
+  "   long_outage_median_delta_FDE_m": 0.0,
+  "4_zupt_reduces_velocity_error": true,
+  "   wilcoxon_velocity_error_stat_p": [
+    19.0,
+    0.3862707203664827
+  ],
+  "5_zupt_indirectly_improves_heading_or_position": {
+    "heading_A_deg": 31.74342947132656,
+    "heading_B_deg": 31.743429471158933,
+    "wilcoxon_heading_stat_p": [
+      11.0,
+      0.32698934959801507
+    ]
+  },
+  "6_zupt_helps_only_cases_with_stationary_periods": {
+    "n_cases_with_usable_stationary": 19,
+    "median_delta_FDE_cases_with_stationary_m": 0.0,
+    "median_delta_FDE_cases_without_stationary_m": 0.0
+  },
+  "7_zupt_ever_hurts_from_false_detections": {
+    "n_cases_with_a_false_positive_zupt": 5,
+    "median_delta_FDE_in_those_cases_m": -14.596278841915193,
+    "total_false_positive_zupt_events": 50
+  },
+  "8_how_many_of_72_cases_contain_usable_stationary_periods": 19,
+  "9_zupt_complements_nhc_or_little_benefit": "little additional benefit",
+  "10_sih_target_improves": {
+    "sih_pass_A": 3,
+    "sih_pass_B": 3,
+    "improved": false
+  },
+  "n_cases_zupt_applied_at_least_once": 10
+}

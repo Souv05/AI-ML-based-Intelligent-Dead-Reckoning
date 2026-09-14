@@ -1,0 +1,17 @@
+{
+  "step": "15F",
+  "analysis_and_experiment": true,
+  "redesigned_navigation_system": false,
+  "detector_frozen_from_validation": true,
+  "r_zupt_frozen_from_validation": true,
+  "changed_Q_P0_NHC_AI_GRU": false,
+  "regenerated_outage_cases": false,
+  "reference_used_as_measurement": false,
+  "synthetic_checks_all_pass": true,
+  "case_accounting_72x2": true,
+  "zupt_active": true,
+  "zupt_improved_median_fde": false,
+  "sih_target_improved": false,
+  "freeze_recommendation": "DO NOT freeze - keep as an optional module; revisit with map-matching / ZIHR",
+  "results_authoritative": true
+}

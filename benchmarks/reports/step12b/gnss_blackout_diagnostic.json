@@ -1,0 +1,16 @@
+{
+  "n_blackout_windows_test": 20141,
+  "n_gnss_visible_windows_test": 66190,
+  "metrics_during_blackout": {
+    "MAE": 5.909017086029053,
+    "RMSE": 7.553225039418179,
+    "R2": -0.1429530382156372,
+    "MedianAE": 4.720067977905273
+  },
+  "metrics_when_gnss_visible": {
+    "MAE": 5.777355194091797,
+    "RMSE": 7.381757065348749,
+    "R2": 0.13179439306259155,
+    "MedianAE": 4.8390069007873535
+  }
+}

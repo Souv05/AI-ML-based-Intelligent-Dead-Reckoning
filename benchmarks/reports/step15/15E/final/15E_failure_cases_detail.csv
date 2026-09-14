@@ -1,0 +1,11 @@
+arm,sequence_id,outage_duration_s,outage_start,failure_event_total,nan_inf,update_failures,position_discontinuity
+15c_no_nhc,Vta08,90.0,1049,3,0,0,3
+15c_no_nhc,Vta08,90.0,1076,4,0,0,4
+15c_no_nhc,Vta08,120.0,926,5,0,0,5
+15c_no_nhc,Vta28,120.0,145,5,0,0,5
+15c_no_nhc,Vta28,120.0,1892,4,0,0,4
+15c_no_nhc,Vta28,120.0,2521,3,0,0,3
+15c_no_nhc,Vtb01,120.0,20305,2,0,0,2
+15c_no_nhc,Vtb01,120.0,28747,19,0,0,19
+15c_no_nhc,Vw02,120.0,3702,3,0,0,3
+15c_no_nhc,Vw02,120.0,45621,49,0,0,49

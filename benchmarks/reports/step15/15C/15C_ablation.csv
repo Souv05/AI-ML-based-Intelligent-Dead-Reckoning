@@ -1,0 +1,3 @@
+comparison,delta_FDE_m,delta_FDE_pct,delta_drift_pct_pts,delta_lateral_velocity_pct,numerical_failures_with_nhc
+Step14_vs_15C(withNHC),0.799856528511043,-0.5293959425842211,1.3912122306157784,,1.0
+15C(noNHC)_vs_15C(withNHC),-171.6412244392966,53.05271002299365,-30.2195806411194,99.98359930499537,1.0

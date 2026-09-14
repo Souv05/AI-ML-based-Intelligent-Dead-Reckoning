@@ -1,0 +1,55 @@
+{
+  "question": "Does GRU v2 (lower velocity RMSE) improve downstream navigation?",
+  "ekf_config": {
+    "source": "D:\\SIH 2026\\outputs\\step14_ekf\\configs\\ekf_config.json",
+    "Q_psd": [
+      8.0,
+      8.0,
+      1.0,
+      1.0,
+      0.004873878716587337
+    ],
+    "sig_gnss_m": 5.0,
+    "P0_diag": [
+      25.0,
+      25.0,
+      4.0,
+      4.0,
+      0.12184696791468343
+    ],
+    "tuned_in_16A": false
+  },
+  "n_cases_evaluated": 71,
+  "aggregate": {
+    "AI_EKF_GRUv1": {
+      "n": 72.0,
+      "median_FDE_m": 229.9313828997593,
+      "mean_FDE_m": 408.6603679971857,
+      "median_ATE_m": 123.03016711076695,
+      "median_drift_pct": 36.840774172975806,
+      "mean_drift_pct": 62.88732334871778,
+      "worst_drift_pct": 351.8728318875487,
+      "median_max_error_m": 229.9313828997593,
+      "sih_pass_rate_pct": 4.166666666666666
+    },
+    "AI_EKF_GRUv2": {
+      "n": 72.0,
+      "median_FDE_m": 177.1545817121407,
+      "mean_FDE_m": 376.7106706284222,
+      "median_ATE_m": 108.97570565441717,
+      "median_drift_pct": 36.35416838341551,
+      "mean_drift_pct": 58.60727682931854,
+      "worst_drift_pct": 292.72585045381356,
+      "median_max_error_m": 177.1545817121407,
+      "sih_pass_rate_pct": 2.7777777777777777
+    }
+  },
+  "median_FDE_change_m": -52.61935220848855,
+  "median_FDE_improvement_pct": 22.900488019091338,
+  "v2_beats_v1_case_win_rate_pct": 69.01408450704226,
+  "wilcoxon_stat": 593.0,
+  "wilcoxon_p": 8.67522407749126e-05,
+  "ekf_tuned": false,
+  "nhc_tuned": false,
+  "model_selected_on_test": false
+}

@@ -1,0 +1,34 @@
+{
+  "timestamp": {
+    "unit": "seconds",
+    "rate_hz_median": 10.0
+  },
+  "coordinate_frame": {
+    "reference_x": "local ENU East (m), per-sequence origin at row 0",
+    "reference_y": "local ENU North (m)",
+    "source": "src/data/coordinates.py geodetic_to_local_enu (equirectangular, R=6378137)"
+  },
+  "heading": {
+    "field": "reference_heading",
+    "unit": "degrees",
+    "convention": "compass: 0=North, 90=East, clockwise-positive"
+  },
+  "velocity_decomposition": {
+    "formula": "vE = v_forward*sin(psi_rad); vN = v_forward*cos(psi_rad)",
+    "note": "navigation convention; verified below vs d(reference_x,y)/dt"
+  },
+  "heading_propagation_decision": "CONSTANT heading (psi_dot = 0) + heading process noise. Rationale: gyro_z shows |corr| = 0.006 with true yaw rate across the 4 test sequences (all < 0.3) - the phone gyro carries no usable vehicle yaw-rate signal, so integrating it would inject noise. No other rotation sensor is trustworthy (Android fused ORIENTATION yaw is also ~0 corr per project EDA; magnetometer is corrupted by the vehicle). Heading error is absorbed by Q_psi and is the motivation for Step 15 (NHC).",
+  "gnss_measurement_source": "reference_x / reference_y (vehicle GNSS/INS ENU fix), used ONLY where gnss_available==1 AND the sample is outside the simulated outage. Phone latitude/longitude updates only every ~9 s (1% of samples) so it is unusable for 10 Hz updates. Consistent with the Step 13C convention (13C used reference_x/y as truth and pre-outage init).",
+  "verification_checks": {
+    "nav_convention_residual_mps_mean": 0.17425846537882766,
+    "math_convention_residual_mps_mean": 33.75152563899226,
+    "nav_convention_confirmed": true,
+    "gyro_z_vs_true_yawrate_corr_per_test_seq": {
+      "Vta08": 0.018,
+      "Vta28": 0.0,
+      "Vtb01": 0.002,
+      "Vw02": -0.003
+    },
+    "gyro_z_usable_as_yawrate": false
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "procedure": [
+    "Stage A \u2014 Static Tilt (at session start, vehicle stationary)",
+    "Stage B \u2014 GNSS Yaw Calibration (during first reliable motion)"
+  ],
+  "stage_a_tilt": {
+    "purpose": "Estimate roll and pitch of phone relative to horizontal",
+    "method": "gravity vector from accelerometer during stationary periods",
+    "minimum_stationary_duration_s": 1.0,
+    "formulas": {
+      "pitch_tilt_deg": "arctan2(-acc_x, sqrt(acc_y\u00b2 + acc_z\u00b2))",
+      "roll_tilt_deg": "arctan2(acc_y, acc_z)"
+    },
+    "note": "In IO-VNBD, pitch \u2248 -85\u00b0, so gimbal lock applies. The tilt angles (5-10\u00b0) are small. Stage B dominates heading accuracy."
+  },
+  "stage_b_yaw": {
+    "purpose": "Estimate yaw_offset = vehicle_heading - phone_yaw",
+    "method": "circular mean of (gnss_course - phone_yaw) during reliable motion",
+    "minimum_gnss_speed_mps": 3.0,
+    "conditions": [
+      "gnss_available == 1",
+      "gnss_speed >= 3.0 m/s",
+      "Use as many samples as available for better estimate"
+    ],
+    "do_not": [
+      "Do NOT estimate yaw while stationary",
+      "Do NOT trust raw magnetometer as sole heading reference",
+      "Do NOT use a single GNSS sample"
+    ],
+    "output": "yaw_offset_deg (circular mean)"
+  },
+  "remount_threshold_deg": 15.0,
+  "realign_on_remount": true,
+  "confidence_thresholds": {
+    "low": 0.3,
+    "medium": 0.5,
+    "high": 0.7
+  },
+  "freeze_note": "Calibration thresholds set from physics/dataset statistics, not tuned on the 4 held-out test sequences."
+}

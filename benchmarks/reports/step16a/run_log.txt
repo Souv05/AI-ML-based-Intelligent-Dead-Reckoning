@@ -1,0 +1,383 @@
+====================================================================
+STEP 16A - GRU v2
+====================================================================
+repo root : D:\SIH 2026
+python    : 3.9.25
+platform  : Windows-10-10.0.26200-SP0
+torch     : 2.5.1+cu121 | device: cuda | NVIDIA GeForce RTX 3050 6GB Laptop GPU
+seed      : 42
+
+split firewall: PASS
+  train sequences: 35
+  val   sequences: 7 ['S3a', 'S3b', 'S3c', 'V-Vfa02', 'Vw03', 'Vw16a', 'Vw16b']
+  test  sequences: 4 ['Vta08', 'Vta28', 'Vtb01', 'Vw02'] (NOT opened until model freeze)
+input channels (fixed order): ['acc_x', 'acc_y', 'acc_z', 'gyro_x', 'gyro_y', 'gyro_z', 'mag_x', 'mag_y', 'mag_z', 'roll', 'pitch', 'yaw']
+target: forward_speed (m/s) <- parquet column reference_speed
+
+frozen GRU v1 hyperparameters: {'hidden_size': 128, 'num_layers': 2, 'learning_rate': 0.0005, 'dropout': 0.2, 'weight_decay': 0.0001, 'selected_by': 'validation_RMSE, then validation_MAE, then parameter_count', 'best_epoch_from_tuning': 2}
+frozen GRU v1 historic TEST metrics: {'MAE': 3.989263, 'RMSE': 5.070742, 'R2': 0.57091, 'MedianAE': 3.32845, 'MAE_kmh': 14.361346, 'RMSE_kmh': 18.25467}
+
+loading TRAIN + VALIDATION windows (T=20) ...
+  train X (625900, 20, 12)  val X (146853, 20, 12)  (6.5s)
+
+--------------------------------------------------------------------
+GRU2-E00  reproduce frozen GRU v1 (validation only)
+frozen GRU v1 VALIDATION metrics: {'RMSE': 7.0636, 'MAE': 5.427732, 'R2': 0.45255, 'MedianAE': 4.438959}
+E00 reproduction gate: PASS
+
+--- GRU2-E00b-base  (T=20, GRU, {}) ---
+  [GRU2-E00b-base] ep01 train_loss=0.52194 val_RMSE=8.07576 val_MAE=6.50167 lr=5.00e-04
+  [GRU2-E00b-base] ep02 train_loss=0.29989 val_RMSE=7.23984 val_MAE=5.49156 lr=5.00e-04
+  [GRU2-E00b-base] ep03 train_loss=0.27073 val_RMSE=7.48675 val_MAE=5.74487 lr=5.00e-04
+  [GRU2-E00b-base] ep04 train_loss=0.25515 val_RMSE=8.23407 val_MAE=6.53148 lr=5.00e-04
+  [GRU2-E00b-base] ep05 train_loss=0.24364 val_RMSE=7.63058 val_MAE=5.89418 lr=5.00e-04
+  [GRU2-E00b-base] ep06 train_loss=0.23286 val_RMSE=8.14178 val_MAE=6.32568 lr=5.00e-04
+  [GRU2-E00b-base] ep07 train_loss=0.22354 val_RMSE=7.90100 val_MAE=6.18893 lr=5.00e-04
+  [GRU2-E00b-base] ep08 train_loss=0.21562 val_RMSE=8.56692 val_MAE=6.71007 lr=5.00e-04
+  [GRU2-E00b-base] early stop at ep8 (best ep2)
+    GRU2-E00b-base val_RMSE=7.23984 val_MAE=5.49156 val_R2=0.4249 params=153729 lat=0.0058ms
+
+--- GRU2-E01a-huber1.0  (T=20, GRU, {'loss': 'huber', 'huber_delta': 1.0}) ---
+  [GRU2-E01a-huber1.0] ep01 train_loss=0.24552 val_RMSE=7.83941 val_MAE=6.23372 lr=5.00e-04
+  [GRU2-E01a-huber1.0] ep02 train_loss=0.14919 val_RMSE=7.68917 val_MAE=5.92153 lr=5.00e-04
+  [GRU2-E01a-huber1.0] ep03 train_loss=0.13496 val_RMSE=7.61582 val_MAE=5.84378 lr=5.00e-04
+  [GRU2-E01a-huber1.0] ep04 train_loss=0.12751 val_RMSE=7.29284 val_MAE=5.42630 lr=5.00e-04
+  [GRU2-E01a-huber1.0] ep05 train_loss=0.12213 val_RMSE=7.78569 val_MAE=6.01078 lr=5.00e-04
+  [GRU2-E01a-huber1.0] ep06 train_loss=0.11784 val_RMSE=8.19568 val_MAE=6.27445 lr=5.00e-04
+  [GRU2-E01a-huber1.0] ep07 train_loss=0.11479 val_RMSE=7.50109 val_MAE=5.71764 lr=5.00e-04
+  [GRU2-E01a-huber1.0] ep08 train_loss=0.11150 val_RMSE=7.92955 val_MAE=6.01547 lr=5.00e-04
+  [GRU2-E01a-huber1.0] ep09 train_loss=0.10845 val_RMSE=8.49473 val_MAE=6.56029 lr=5.00e-04
+  [GRU2-E01a-huber1.0] ep10 train_loss=0.10562 val_RMSE=7.54610 val_MAE=5.87429 lr=5.00e-04
+  [GRU2-E01a-huber1.0] early stop at ep10 (best ep4)
+    GRU2-E01a-huber1.0 val_RMSE=7.29284 val_MAE=5.42630 val_R2=0.4164 params=153729 lat=0.0055ms
+
+--- GRU2-E01b-huber2.0  (T=20, GRU, {'loss': 'huber', 'huber_delta': 2.0}) ---
+  [GRU2-E01b-huber2.0] ep01 train_loss=0.25937 val_RMSE=7.89101 val_MAE=6.29426 lr=5.00e-04
+  [GRU2-E01b-huber2.0] ep02 train_loss=0.15112 val_RMSE=7.32552 val_MAE=5.57620 lr=5.00e-04
+  [GRU2-E01b-huber2.0] ep03 train_loss=0.13799 val_RMSE=7.03755 val_MAE=5.26458 lr=5.00e-04
+  [GRU2-E01b-huber2.0] ep04 train_loss=0.13143 val_RMSE=7.32364 val_MAE=5.56991 lr=5.00e-04
+  [GRU2-E01b-huber2.0] ep05 train_loss=0.12695 val_RMSE=7.47003 val_MAE=5.61158 lr=5.00e-04
+  [GRU2-E01b-huber2.0] ep06 train_loss=0.12310 val_RMSE=7.78269 val_MAE=6.00156 lr=5.00e-04
+  [GRU2-E01b-huber2.0] ep07 train_loss=0.11895 val_RMSE=8.00218 val_MAE=6.00619 lr=5.00e-04
+  [GRU2-E01b-huber2.0] ep08 train_loss=0.11557 val_RMSE=7.84563 val_MAE=5.82289 lr=5.00e-04
+  [GRU2-E01b-huber2.0] ep09 train_loss=0.11238 val_RMSE=8.56525 val_MAE=6.45926 lr=5.00e-04
+  [GRU2-E01b-huber2.0] early stop at ep9 (best ep3)
+    GRU2-E01b-huber2.0 val_RMSE=7.03755 val_MAE=5.26458 val_R2=0.4566 params=153729 lat=0.0055ms
+
+--- GRU2-E02-plateau  (T=20, GRU, {'scheduler': 'plateau'}) ---
+  [GRU2-E02-plateau] ep01 train_loss=0.52041 val_RMSE=7.84610 val_MAE=6.32378 lr=5.00e-04
+  [GRU2-E02-plateau] ep02 train_loss=0.30049 val_RMSE=6.88335 val_MAE=5.30119 lr=5.00e-04
+  [GRU2-E02-plateau] ep03 train_loss=0.26995 val_RMSE=6.95142 val_MAE=5.26082 lr=5.00e-04
+  [GRU2-E02-plateau] ep04 train_loss=0.25396 val_RMSE=7.35274 val_MAE=5.65543 lr=5.00e-04
+  [GRU2-E02-plateau] ep05 train_loss=0.24192 val_RMSE=6.81166 val_MAE=5.18777 lr=5.00e-04
+  [GRU2-E02-plateau] ep06 train_loss=0.23245 val_RMSE=7.47952 val_MAE=5.70686 lr=5.00e-04
+  [GRU2-E02-plateau] ep07 train_loss=0.22450 val_RMSE=7.81508 val_MAE=6.04457 lr=5.00e-04
+  [GRU2-E02-plateau] ep08 train_loss=0.21606 val_RMSE=7.63349 val_MAE=5.89798 lr=5.00e-04
+  [GRU2-E02-plateau] ep09 train_loss=0.20836 val_RMSE=8.16378 val_MAE=6.20085 lr=2.50e-04
+  [GRU2-E02-plateau] ep10 train_loss=0.19878 val_RMSE=7.97923 val_MAE=6.10505 lr=2.50e-04
+  [GRU2-E02-plateau] ep11 train_loss=0.19451 val_RMSE=7.92661 val_MAE=6.08332 lr=2.50e-04
+  [GRU2-E02-plateau] early stop at ep11 (best ep5)
+    GRU2-E02-plateau val_RMSE=6.81166 val_MAE=5.18777 val_R2=0.4909 params=153729 lat=0.0055ms
+
+--- GRU2-E03-clip1.0  (T=20, GRU, {'clip_norm': 1.0}) ---
+  [GRU2-E03-clip1.0] ep01 train_loss=0.53173 val_RMSE=8.45863 val_MAE=6.90133 lr=5.00e-04
+  [GRU2-E03-clip1.0] ep02 train_loss=0.30398 val_RMSE=7.31256 val_MAE=5.65710 lr=5.00e-04
+  [GRU2-E03-clip1.0] ep03 train_loss=0.26934 val_RMSE=7.66369 val_MAE=5.94039 lr=5.00e-04
+  [GRU2-E03-clip1.0] ep04 train_loss=0.25301 val_RMSE=7.64958 val_MAE=5.73355 lr=5.00e-04
+  [GRU2-E03-clip1.0] ep05 train_loss=0.24076 val_RMSE=7.69600 val_MAE=5.87596 lr=5.00e-04
+  [GRU2-E03-clip1.0] ep06 train_loss=0.23204 val_RMSE=7.86140 val_MAE=5.92739 lr=5.00e-04
+  [GRU2-E03-clip1.0] ep07 train_loss=0.22286 val_RMSE=7.70998 val_MAE=5.82055 lr=5.00e-04
+  [GRU2-E03-clip1.0] ep08 train_loss=0.21410 val_RMSE=8.40478 val_MAE=6.57596 lr=5.00e-04
+  [GRU2-E03-clip1.0] early stop at ep8 (best ep2)
+    GRU2-E03-clip1.0 val_RMSE=7.31256 val_MAE=5.65710 val_R2=0.4133 params=153729 lat=0.0055ms
+
+--- GRU2-E04-patience10  (T=20, GRU, {'patience': 10, 'max_epochs': 30}) ---
+  [GRU2-E04-patience10] ep01 train_loss=0.52265 val_RMSE=8.51719 val_MAE=6.94866 lr=5.00e-04
+  [GRU2-E04-patience10] ep02 train_loss=0.30626 val_RMSE=7.29337 val_MAE=5.67504 lr=5.00e-04
+  [GRU2-E04-patience10] ep03 train_loss=0.27466 val_RMSE=7.40557 val_MAE=5.66431 lr=5.00e-04
+  [GRU2-E04-patience10] ep04 train_loss=0.25689 val_RMSE=7.10700 val_MAE=5.34496 lr=5.00e-04
+  [GRU2-E04-patience10] ep05 train_loss=0.24380 val_RMSE=7.38578 val_MAE=5.55031 lr=5.00e-04
+  [GRU2-E04-patience10] ep06 train_loss=0.23388 val_RMSE=8.04210 val_MAE=6.21728 lr=5.00e-04
+  [GRU2-E04-patience10] ep07 train_loss=0.22299 val_RMSE=8.13970 val_MAE=6.22792 lr=5.00e-04
+  [GRU2-E04-patience10] ep08 train_loss=0.21410 val_RMSE=7.62779 val_MAE=5.88021 lr=5.00e-04
+  [GRU2-E04-patience10] ep09 train_loss=0.20565 val_RMSE=8.36063 val_MAE=6.48961 lr=5.00e-04
+  [GRU2-E04-patience10] ep10 train_loss=0.19850 val_RMSE=8.13734 val_MAE=6.28380 lr=5.00e-04
+  [GRU2-E04-patience10] ep11 train_loss=0.19056 val_RMSE=8.21057 val_MAE=6.31097 lr=5.00e-04
+  [GRU2-E04-patience10] ep12 train_loss=0.18510 val_RMSE=8.34260 val_MAE=6.37785 lr=5.00e-04
+  [GRU2-E04-patience10] ep13 train_loss=0.17889 val_RMSE=7.90906 val_MAE=6.12470 lr=5.00e-04
+  [GRU2-E04-patience10] ep14 train_loss=0.17274 val_RMSE=8.23108 val_MAE=6.40792 lr=5.00e-04
+  [GRU2-E04-patience10] early stop at ep14 (best ep4)
+    GRU2-E04-patience10 val_RMSE=7.10700 val_MAE=5.34496 val_R2=0.4458 params=153729 lat=0.0057ms
+
+--- GRU2-E05a-T20  (T=20, GRU, {}) ---
+  [GRU2-E05a-T20] ep01 train_loss=0.52043 val_RMSE=7.98280 val_MAE=6.45909 lr=5.00e-04
+  [GRU2-E05a-T20] ep02 train_loss=0.30249 val_RMSE=7.10361 val_MAE=5.49397 lr=5.00e-04
+  [GRU2-E05a-T20] ep03 train_loss=0.27118 val_RMSE=7.23569 val_MAE=5.61344 lr=5.00e-04
+  [GRU2-E05a-T20] ep04 train_loss=0.25520 val_RMSE=7.50859 val_MAE=5.80312 lr=5.00e-04
+  [GRU2-E05a-T20] ep05 train_loss=0.24323 val_RMSE=7.00975 val_MAE=5.28373 lr=5.00e-04
+  [GRU2-E05a-T20] ep06 train_loss=0.23384 val_RMSE=7.30577 val_MAE=5.63212 lr=5.00e-04
+  [GRU2-E05a-T20] ep07 train_loss=0.22460 val_RMSE=7.12352 val_MAE=5.39135 lr=5.00e-04
+  [GRU2-E05a-T20] ep08 train_loss=0.21643 val_RMSE=7.98494 val_MAE=6.22918 lr=5.00e-04
+  [GRU2-E05a-T20] ep09 train_loss=0.20866 val_RMSE=7.68958 val_MAE=5.81952 lr=5.00e-04
+  [GRU2-E05a-T20] ep10 train_loss=0.20048 val_RMSE=7.89769 val_MAE=5.94764 lr=5.00e-04
+  [GRU2-E05a-T20] ep11 train_loss=0.19353 val_RMSE=7.60423 val_MAE=5.83874 lr=5.00e-04
+  [GRU2-E05a-T20] early stop at ep11 (best ep5)
+    GRU2-E05a-T20 val_RMSE=7.00975 val_MAE=5.28373 val_R2=0.4609 params=153729 lat=0.0057ms
+
+building T=40 windows from parquet (train + val) ...
+  T=40: train X (625200, 40, 12)  val X (146713, 40, 12)
+
+--- GRU2-E05b-T40  (T=40, GRU, {}) ---
+  [GRU2-E05b-T40] ep01 train_loss=0.48843 val_RMSE=7.37375 val_MAE=5.69156 lr=5.00e-04
+  [GRU2-E05b-T40] ep02 train_loss=0.26596 val_RMSE=7.64209 val_MAE=5.83794 lr=5.00e-04
+  [GRU2-E05b-T40] ep03 train_loss=0.23776 val_RMSE=7.63440 val_MAE=5.76496 lr=5.00e-04
+  [GRU2-E05b-T40] ep04 train_loss=0.22033 val_RMSE=7.08115 val_MAE=5.14520 lr=5.00e-04
+  [GRU2-E05b-T40] ep05 train_loss=0.20780 val_RMSE=7.52393 val_MAE=5.57733 lr=5.00e-04
+  [GRU2-E05b-T40] ep06 train_loss=0.19634 val_RMSE=7.89799 val_MAE=5.91790 lr=5.00e-04
+  [GRU2-E05b-T40] ep07 train_loss=0.18629 val_RMSE=8.36704 val_MAE=6.34855 lr=5.00e-04
+  [GRU2-E05b-T40] ep08 train_loss=0.17560 val_RMSE=8.02664 val_MAE=6.12601 lr=5.00e-04
+  [GRU2-E05b-T40] ep09 train_loss=0.16658 val_RMSE=8.14435 val_MAE=6.16062 lr=5.00e-04
+  [GRU2-E05b-T40] ep10 train_loss=0.15755 val_RMSE=8.53869 val_MAE=6.63601 lr=5.00e-04
+  [GRU2-E05b-T40] early stop at ep10 (best ep4)
+    GRU2-E05b-T40 val_RMSE=7.08115 val_MAE=5.14520 val_R2=0.4497 params=153729 lat=0.0085ms
+
+building T=60 windows from parquet (train + val) ...
+  T=60: train X (624500, 60, 12)  val X (146573, 60, 12)
+
+--- GRU2-E05c-T60  (T=60, GRU, {}) ---
+  [GRU2-E05c-T60] ep01 train_loss=0.47866 val_RMSE=7.27992 val_MAE=5.74969 lr=5.00e-04
+  [GRU2-E05c-T60] ep02 train_loss=0.24630 val_RMSE=6.69586 val_MAE=4.81795 lr=5.00e-04
+  [GRU2-E05c-T60] ep03 train_loss=0.21365 val_RMSE=7.11580 val_MAE=5.29470 lr=5.00e-04
+  [GRU2-E05c-T60] ep04 train_loss=0.19764 val_RMSE=7.70494 val_MAE=5.92501 lr=5.00e-04
+  [GRU2-E05c-T60] ep05 train_loss=0.18370 val_RMSE=7.42065 val_MAE=5.59956 lr=5.00e-04
+  [GRU2-E05c-T60] ep06 train_loss=0.17210 val_RMSE=7.91479 val_MAE=6.08298 lr=5.00e-04
+  [GRU2-E05c-T60] ep07 train_loss=0.15953 val_RMSE=8.93126 val_MAE=7.07305 lr=5.00e-04
+  [GRU2-E05c-T60] ep08 train_loss=0.14759 val_RMSE=8.05745 val_MAE=6.18175 lr=5.00e-04
+  [GRU2-E05c-T60] early stop at ep8 (best ep2)
+    GRU2-E05c-T60 val_RMSE=6.69586 val_MAE=4.81795 val_R2=0.5079 params=153729 lat=0.0108ms
+
+--- GRU2-E06a-h64l1  (T=20, GRU, {}) ---
+  [GRU2-E06a-h64l1] ep01 train_loss=0.60676 val_RMSE=8.48873 val_MAE=7.06571 lr=5.00e-04
+  [GRU2-E06a-h64l1] ep02 train_loss=0.33079 val_RMSE=7.34636 val_MAE=5.86648 lr=5.00e-04
+  [GRU2-E06a-h64l1] ep03 train_loss=0.29294 val_RMSE=7.49525 val_MAE=5.74267 lr=5.00e-04
+  [GRU2-E06a-h64l1] ep04 train_loss=0.27510 val_RMSE=7.81371 val_MAE=6.05210 lr=5.00e-04
+  [GRU2-E06a-h64l1] ep05 train_loss=0.26361 val_RMSE=7.54035 val_MAE=5.71943 lr=5.00e-04
+  [GRU2-E06a-h64l1] ep06 train_loss=0.25529 val_RMSE=7.34489 val_MAE=5.55701 lr=5.00e-04
+  [GRU2-E06a-h64l1] ep07 train_loss=0.24823 val_RMSE=7.11553 val_MAE=5.34611 lr=5.00e-04
+  [GRU2-E06a-h64l1] ep08 train_loss=0.24245 val_RMSE=7.90401 val_MAE=6.04958 lr=5.00e-04
+  [GRU2-E06a-h64l1] ep09 train_loss=0.23744 val_RMSE=7.42339 val_MAE=5.62112 lr=5.00e-04
+  [GRU2-E06a-h64l1] ep10 train_loss=0.23274 val_RMSE=7.35945 val_MAE=5.55189 lr=5.00e-04
+  [GRU2-E06a-h64l1] ep11 train_loss=0.22873 val_RMSE=7.98162 val_MAE=6.17762 lr=5.00e-04
+  [GRU2-E06a-h64l1] ep12 train_loss=0.22505 val_RMSE=7.44808 val_MAE=5.67598 lr=5.00e-04
+  [GRU2-E06a-h64l1] ep13 train_loss=0.22123 val_RMSE=7.53312 val_MAE=5.69481 lr=5.00e-04
+  [GRU2-E06a-h64l1] early stop at ep13 (best ep7)
+    GRU2-E06a-h64l1 val_RMSE=7.11553 val_MAE=5.34611 val_R2=0.4445 params=15041 lat=0.0032ms
+
+--- GRU2-E06b-h96l1  (T=20, GRU, {}) ---
+  [GRU2-E06b-h96l1] ep01 train_loss=0.56154 val_RMSE=8.46517 val_MAE=6.98641 lr=5.00e-04
+  [GRU2-E06b-h96l1] ep02 train_loss=0.32771 val_RMSE=7.14691 val_MAE=5.61261 lr=5.00e-04
+  [GRU2-E06b-h96l1] ep03 train_loss=0.28678 val_RMSE=7.62674 val_MAE=5.89566 lr=5.00e-04
+  [GRU2-E06b-h96l1] ep04 train_loss=0.26712 val_RMSE=7.34265 val_MAE=5.62457 lr=5.00e-04
+  [GRU2-E06b-h96l1] ep05 train_loss=0.25655 val_RMSE=7.08817 val_MAE=5.47087 lr=5.00e-04
+  [GRU2-E06b-h96l1] ep06 train_loss=0.24792 val_RMSE=7.30906 val_MAE=5.57509 lr=5.00e-04
+  [GRU2-E06b-h96l1] ep07 train_loss=0.24140 val_RMSE=7.78834 val_MAE=5.94476 lr=5.00e-04
+  [GRU2-E06b-h96l1] ep08 train_loss=0.23528 val_RMSE=7.68383 val_MAE=5.88143 lr=5.00e-04
+  [GRU2-E06b-h96l1] ep09 train_loss=0.22936 val_RMSE=8.29811 val_MAE=6.34233 lr=5.00e-04
+  [GRU2-E06b-h96l1] ep10 train_loss=0.22419 val_RMSE=8.16839 val_MAE=6.24183 lr=5.00e-04
+  [GRU2-E06b-h96l1] ep11 train_loss=0.21999 val_RMSE=8.62954 val_MAE=6.67298 lr=5.00e-04
+  [GRU2-E06b-h96l1] early stop at ep11 (best ep5)
+    GRU2-E06b-h96l1 val_RMSE=7.08817 val_MAE=5.47087 val_R2=0.4487 params=31777 lat=0.0027ms
+
+--- GRU2-E06c-h64l2  (T=20, GRU, {}) ---
+  [GRU2-E06c-h64l2] ep01 train_loss=0.56456 val_RMSE=8.39107 val_MAE=6.89607 lr=5.00e-04
+  [GRU2-E06c-h64l2] ep02 train_loss=0.32044 val_RMSE=7.10692 val_MAE=5.34745 lr=5.00e-04
+  [GRU2-E06c-h64l2] ep03 train_loss=0.28577 val_RMSE=7.33775 val_MAE=5.55282 lr=5.00e-04
+  [GRU2-E06c-h64l2] ep04 train_loss=0.27071 val_RMSE=7.48472 val_MAE=5.75818 lr=5.00e-04
+  [GRU2-E06c-h64l2] ep05 train_loss=0.26059 val_RMSE=7.33166 val_MAE=5.60498 lr=5.00e-04
+  [GRU2-E06c-h64l2] ep06 train_loss=0.25240 val_RMSE=7.42230 val_MAE=5.72753 lr=5.00e-04
+  [GRU2-E06c-h64l2] ep07 train_loss=0.24411 val_RMSE=8.00255 val_MAE=6.16907 lr=5.00e-04
+  [GRU2-E06c-h64l2] ep08 train_loss=0.23733 val_RMSE=7.60939 val_MAE=5.78072 lr=5.00e-04
+  [GRU2-E06c-h64l2] early stop at ep8 (best ep2)
+    GRU2-E06c-h64l2 val_RMSE=7.10692 val_MAE=5.34745 val_R2=0.4458 params=40001 lat=0.0029ms
+
+--- GRU2-E07-tcngru  (T=20, TCN-GRU, {}) ---
+  [GRU2-E07-tcngru] ep01 train_loss=0.49159 val_RMSE=8.21589 val_MAE=6.49148 lr=5.00e-04
+  [GRU2-E07-tcngru] ep02 train_loss=0.30037 val_RMSE=7.92102 val_MAE=6.01023 lr=5.00e-04
+  [GRU2-E07-tcngru] ep03 train_loss=0.27034 val_RMSE=7.70606 val_MAE=5.78420 lr=5.00e-04
+  [GRU2-E07-tcngru] ep04 train_loss=0.25601 val_RMSE=7.40132 val_MAE=5.41329 lr=5.00e-04
+  [GRU2-E07-tcngru] ep05 train_loss=0.24710 val_RMSE=7.00127 val_MAE=4.96662 lr=5.00e-04
+  [GRU2-E07-tcngru] ep06 train_loss=0.24112 val_RMSE=7.54871 val_MAE=5.63616 lr=5.00e-04
+  [GRU2-E07-tcngru] ep07 train_loss=0.23598 val_RMSE=7.78584 val_MAE=5.79554 lr=5.00e-04
+  [GRU2-E07-tcngru] ep08 train_loss=0.23171 val_RMSE=7.41731 val_MAE=5.36553 lr=5.00e-04
+  [GRU2-E07-tcngru] ep09 train_loss=0.22788 val_RMSE=7.70951 val_MAE=5.75026 lr=5.00e-04
+  [GRU2-E07-tcngru] ep10 train_loss=0.22404 val_RMSE=7.38912 val_MAE=5.39979 lr=5.00e-04
+  [GRU2-E07-tcngru] ep11 train_loss=0.22019 val_RMSE=7.47979 val_MAE=5.52804 lr=5.00e-04
+  [GRU2-E07-tcngru] early stop at ep11 (best ep5)
+    GRU2-E07-tcngru val_RMSE=7.00127 val_MAE=4.96662 val_R2=0.4622 params=23169 lat=0.0023ms
+
+          experiment_id  val_rmse  val_mae   val_r2  parameter_count  inference_latency_ms
+GRU_v1_frozen_reference  7.063600 5.427732 0.452550                0              0.005424
+         GRU2-E00b-base  7.239837 5.491558 0.424891           153729              0.005823
+     GRU2-E01a-huber1.0  7.292843 5.426305 0.416439           153729              0.005484
+     GRU2-E01b-huber2.0  7.037546 5.264581 0.456581           153729              0.005479
+       GRU2-E02-plateau  6.811660 5.187770 0.490905           153729              0.005482
+       GRU2-E03-clip1.0  7.312563 5.657097 0.413279           153729              0.005472
+    GRU2-E04-patience10  7.106995 5.344963 0.445802           153729              0.005710
+          GRU2-E05a-T20  7.009748 5.283732 0.460865           153729              0.005719
+          GRU2-E05b-T40  7.081153 5.145204 0.449744           153729              0.008532
+          GRU2-E05c-T60  6.695857 4.817945 0.507886           153729              0.010792
+        GRU2-E06a-h64l1  7.115526 5.346110 0.444471            15041              0.003211
+        GRU2-E06b-h96l1  7.088174 5.470874 0.448734            31777              0.002675
+        GRU2-E06c-h64l2  7.106925 5.347449 0.445813            40001              0.002947
+        GRU2-E07-tcngru  7.001265 4.966622 0.462169            23169              0.002285
+
+selection ranking (val_RMSE, val_MAE, -R2, worst-bin RMSE, params, latency):
+  GRU2-E05c-T60            RMSE=6.69586 MAE=4.81795 R2=0.5079 worstbin=6.6959 params=153729 lat=0.0108
+  GRU2-E02-plateau         RMSE=6.81166 MAE=5.18777 R2=0.4909 worstbin=7.5337 params=153729 lat=0.0055
+  GRU2-E07-tcngru          RMSE=7.00127 MAE=4.96662 R2=0.4622 worstbin=7.7263 params=23169 lat=0.0023
+  GRU2-E05a-T20            RMSE=7.00975 MAE=5.28373 R2=0.4609 worstbin=7.7338 params=153729 lat=0.0057
+  GRU2-E01b-huber2.0       RMSE=7.03755 MAE=5.26458 R2=0.4566 worstbin=7.8210 params=153729 lat=0.0055
+  GRU2-E05b-T40            RMSE=7.08115 MAE=5.14520 R2=0.4497 worstbin=7.0812 params=153729 lat=0.0085
+  GRU2-E06b-h96l1          RMSE=7.08817 MAE=5.47087 R2=0.4487 worstbin=7.7773 params=31777 lat=0.0027
+  GRU2-E06c-h64l2          RMSE=7.10692 MAE=5.34745 R2=0.4458 worstbin=7.7909 params=40001 lat=0.0029
+  GRU2-E04-patience10      RMSE=7.10700 MAE=5.34496 R2=0.4458 worstbin=7.8731 params=153729 lat=0.0057
+  GRU2-E06a-h64l1          RMSE=7.11553 MAE=5.34611 R2=0.4445 worstbin=7.9024 params=15041 lat=0.0032
+  GRU2-E00b-base           RMSE=7.23984 MAE=5.49156 R2=0.4249 worstbin=8.0624 params=153729 lat=0.0058
+  GRU2-E01a-huber1.0       RMSE=7.29284 MAE=5.42630 R2=0.4164 worstbin=8.0946 params=153729 lat=0.0055
+  GRU2-E03-clip1.0         RMSE=7.31256 MAE=5.65710 R2=0.4133 worstbin=7.9997 params=153729 lat=0.0055
+
+WINNER: GRU2-E05c-T60
+
+GRU v2 FROZEN -> D:\SIH 2026\outputs\step16a\gru_v2_best.pt
+{
+  "experiment_id": "GRU2-E05c-T60",
+  "model_type": "GRU",
+  "input_channels": [
+    "acc_x",
+    "acc_y",
+    "acc_z",
+    "gyro_x",
+    "gyro_y",
+    "gyro_z",
+    "mag_x",
+    "mag_y",
+    "mag_z",
+    "roll",
+    "pitch",
+    "yaw"
+  ],
+  "target": "forward_speed",
+  "target_units": "m/s",
+  "window_size": 60,
+  "hidden_size": 128,
+  "num_layers": 2,
+  "dropout": 0.2,
+  "loss": "mse",
+  "huber_delta": null,
+  "optimizer": "Adam",
+  "learning_rate": 0.0005,
+  "weight_decay": 0.0001,
+  "scheduler": "none",
+  "gradient_clip_norm": 5.0,
+  "scaler": {
+    "source": "D:\\SIH 2026\\outputs\\step12d\\final\\scaler.json",
+    "x_mean": [
+      -0.0038867436815053225,
+      -0.09016896039247513,
+      9.839821815490723,
+      0.0006307280855253339,
+      -0.005417665466666222,
+      -5.4668771554133855e-06,
+      -11.391737937927246,
+      -34.41628646850586,
+      11.025653839111328,
+      -72.12382507324219,
+      -83.3687744140625,
+      204.11412048339844
+    ],
+    "x_std": [
+      1.8430840969085693,
+      1.7717643976211548,
+      0.8288640975952148,
+      0.15573567152023315,
+      0.25702086091041565,
+      0.12078078836202621,
+      13.811131477355957,
+      4.494505882263184,
+      14.839299201965332,
+      127.23284149169922,
+      3.5079188346862793,
+      111.6485824584961
+    ],
+    "y_mean": 12.432488670792509,
+    "y_std": 8.271841715208385,
+    "note": "reused verbatim from frozen 12D v1"
+  },
+  "seed": 42,
+  "best_epoch": 2,
+  "validation_metrics": {
+    "RMSE": 6.695856752495155,
+    "MAE": 4.817945301043333,
+    "R2": 0.507885913628143,
+    "MedianAE": 3.648716449737549
+  },
+  "parameter_count": 153729,
+  "model_size_mb": 0.5899,
+  "inference_latency_ms_dev": 0.010792,
+  "device_used_for_training": "cuda",
+  "frozen": true
+}
+NOTE: winner window != 20; speed/motion-regime table given for GRU_v1 only.
+
+speed-regime:
+ model speed_bin_mps      n     RMSE      MAE      bias
+GRU_v1           0-1   8553 4.242669 2.305074 -2.240077
+GRU_v1           1-5   9112 5.144631 3.344488 -1.884796
+GRU_v1          5-10  25884 5.145974 4.298584  0.609163
+GRU_v1           >10 103304 7.776118 6.152946  5.324870
+
+motion-regime:
+ model  motion_regime     n     RMSE      MAE      bias
+GRU_v1     stationary  7469 4.186118 2.244871 -2.217700
+GRU_v1   acceleration 34440 6.506084 5.169070  3.071216
+GRU_v1        braking 31963 6.246514 4.874823  2.442419
+GRU_v1 constant_speed 68761 8.005033 6.281291  5.211285
+GRU_v1        turning 13730 4.769313 3.576627  0.586116
+
+====================================================================
+25  FINAL HELD-OUT TEST  (test set opened now, after freeze)
+frozen GRU v1 TEST: {'RMSE': 5.070727, 'MAE': 3.987608, 'R2': 0.570912, 'MedianAE': 3.328142}
+frozen GRU v2 TEST: {'RMSE': 4.401557, 'MAE': 3.43196, 'R2': 0.675535, 'MedianAE': 2.867649}
+historic v1 TEST (12D file): {'MAE': 3.989263, 'RMSE': 5.070742, 'R2': 0.57091, 'MedianAE': 3.32845, 'MAE_kmh': 14.361346, 'RMSE_kmh': 18.25467}
+
+plots written to D:\SIH 2026\outputs\step16a\plots
+
+============================================
+STEP 16A - GRU V2 FINAL SUMMARY
+============================================
+Dataset:
+  D:\SIH 2026
+Protocol:
+  VALIDATED EXISTING SPLIT
+Frozen GRU v1:
+  RMSE: 5.070727
+  MAE : 3.987608
+  R2  : 0.570912
+Best GRU v2 (GRU2-E05c-T60):
+  RMSE: 4.401557
+  MAE : 3.431960
+  R2  : 0.675535
+Improvement:
+  RMSE: 0.669170 (13.20%)
+  MAE : 0.555648
+  R2  : 0.104623
+Parameters: 153729   Model size: 0.5899 MB   Latency(dev): 0.01079 ms/window
+Navigation comparison: run models/step16a_nav_check.py
+Test used during tuning: NO
+Baseline modified: NO   Future information: NO   EKF tuned: NO   NHC tuned: NO   Data truncated: NO
+AUTHORITATIVE RESULT: NO
+GRU V2: ACCEPT
+NEXT STEP: 16B - TCN-GRU challenger  OR  16C - lightweight Transformer
+============================================
+
+16A experiment script COMPLETE.

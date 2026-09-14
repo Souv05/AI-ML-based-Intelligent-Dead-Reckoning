@@ -1,0 +1,14 @@
+{
+  "device_train_eval": "cuda",
+  "batch_size": 2048,
+  "inference_ms_per_window_batched": 0.001187880859376822,
+  "inference_ms_per_window_single_cpu": 2.2458790000132467,
+  "model_file_size_bytes": 78589,
+  "parameter_count": 17434,
+  "training_time_s": 13.542254400000047,
+  "note": "Development-machine benchmark; not a smartphone/edge (Phase 21/22) benchmark. TCN convolutions are O(T) in window length (like the GRU), so latency should scale roughly linearly with the selected window length, unlike a self-attention encoder's O(T^2).",
+  "window_length": 40,
+  "edge_budget_max_params": 100000,
+  "edge_budget_max_latency_ms_per_window": 8.0,
+  "edge_budget_eligible": true
+}

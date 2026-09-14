@@ -1,0 +1,8 @@
+{
+  "model_file_size_bytes": 5620436609,
+  "training_time_s": 111.70570802688599,
+  "inference_batch_size": 256,
+  "inference_time_per_sample_ms": 0.14194007962942123,
+  "device": "cpu",
+  "random_forest_backend": "sklearn_cpu"
+}

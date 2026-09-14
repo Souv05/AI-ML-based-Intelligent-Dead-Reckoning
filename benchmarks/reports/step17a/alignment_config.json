@@ -1,0 +1,72 @@
+{
+  "coordinate_frames": {
+    "phone_frame": {
+      "X": "device right (portrait mode)",
+      "Y": "device top (screen up = positive direction away from user)",
+      "Z": "screen front face (out of screen toward user)",
+      "handedness": "right-handed"
+    },
+    "vehicle_frame": {
+      "x_v": "vehicle forward (direction of motion)",
+      "y_v": "vehicle lateral left (port side)",
+      "z_v": "vehicle up (positive = upward)",
+      "handedness": "right-handed"
+    },
+    "navigation_frame": {
+      "description": "East-North-Up (ENU)",
+      "x_n": "East",
+      "y_n": "North",
+      "z_n": "Up"
+    }
+  },
+  "heading_convention": {
+    "definition": "Compass heading: degrees clockwise from North",
+    "North": 0,
+    "East": 90,
+    "South": 180,
+    "West": 270,
+    "source_in_dataset": "reference_heading (vehicle OBD/GPS), gnss_heading (phone GPS course)",
+    "android_yaw": "0=North, 90=East \u2014 same compass convention"
+  },
+  "rotation_convention": {
+    "matrix_notation": "R_phone_to_vehicle: v_vehicle = R @ v_phone",
+    "euler_order": "ZYX intrinsic (yaw \u2192 pitch \u2192 roll)",
+    "euler_definition": "yaw_offset, then tilt pitch, then tilt roll",
+    "representation": "3x3 rotation matrix (orthonormal, det=+1)"
+  },
+  "android_accelerometer": {
+    "type": "TYPE_ACCELEROMETER \u2014 total specific force including gravity",
+    "units": "m/s\u00b2",
+    "gravity_handling": "gravity is NOT removed; acc_z \u2248 +g when Z is up",
+    "note": "Do not subtract gravity twice. The scaler trained on this convention."
+  },
+  "android_orientation": {
+    "yaw": "azimuth of device Y+ (top) from North, clockwise, [0, 360\u00b0]",
+    "pitch": "angle from horizontal plane: 0=flat, -90=vertical screen toward user",
+    "roll": "rotation about X-axis; ill-defined when |pitch|\u224890\u00b0 (gimbal lock)"
+  },
+  "io_vnbd_mounting": {
+    "observed_pitch_deg": "typically -82 to -88\u00b0 (phone nearly vertical, portrait)",
+    "observed_acc_z": "\u2248 +9.8 m/s\u00b2 (phone Z \u2248 up, nearly horizontal gravity component)",
+    "roll_behaviour": "high variance due to gimbal lock at pitch \u2248 \u00b190\u00b0",
+    "yaw_offset_per_sequence": "different for each drive (different mounting per vehicle/driver)"
+  },
+  "stationary_detector": {
+    "acc_mag_tolerance_mps2": 0.5,
+    "gyro_mag_threshold_rads": 0.1,
+    "window_s": 1.0,
+    "acc_std_threshold_mps2": 0.3,
+    "tuning_note": "Thresholds set from physics, not tuned on test data."
+  },
+  "gnss_yaw_calibration": {
+    "speed_threshold_mps": 3.0,
+    "method": "circular mean of (gnss_course - phone_yaw) over all valid motion samples",
+    "gnss_valid_column": "gnss_available",
+    "gnss_course_column": "gnss_heading (or reference_heading for evaluation)",
+    "robustness": "circular mean avoids 0\u00b0/360\u00b0 wrapping artefacts"
+  },
+  "sampling_rate_hz": 10.0,
+  "step": "17A",
+  "version": "1.0",
+  "timestamp": "2026-09-10T22:17:02.834789"
+}

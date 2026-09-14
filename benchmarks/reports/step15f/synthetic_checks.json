@@ -1,0 +1,10 @@
+{
+  "1_nonzero_innovation_when_moving": true,
+  "2_correction_moves_velocity_toward_zero": true,
+  "3_heading_not_directly_modified": true,
+  "4_covariance_stays_positive_semidefinite": true,
+  "5_no_nan_inf": true,
+  "6_no_direct_overwrite": true,
+  "7_detector_does_not_trigger_while_moving": true,
+  "8_detector_handles_entering_and_leaving_a_stop": true
+}

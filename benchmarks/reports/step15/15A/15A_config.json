@@ -1,0 +1,45 @@
+{
+  "state": [
+    "E",
+    "N",
+    "vE",
+    "vN",
+    "psi"
+  ],
+  "nhc_measurement": {
+    "z": 0.0,
+    "h": "v_lateral(x) = vE*cos(psi) - vN*sin(psi)",
+    "H": "[0, 0, cos(psi), -sin(psi), -v_forward(x)]",
+    "sig_nhc_mps_initial": 1.0,
+    "sig_nhc_status": "EXPLICIT, NOT optimal, NOT tuned on validation or test - selection is Step 15B"
+  },
+  "body_frame_convention": {
+    "f_hat": "(sin(psi), cos(psi))",
+    "l_hat": "(cos(psi), -sin(psi))",
+    "derivation": "orthonormal rotation of Step 14 nav convention vE=v*sin(psi), vN=v*cos(psi); see section 10"
+  },
+  "reused_from_step14_unchanged": [
+    "EKF predict()",
+    "covariance ceiling _clamp_P()",
+    "GNSS update structure (not exercised in 15A)",
+    "frozen GRU",
+    "test split"
+  ],
+  "new_in_15a": [
+    "body_velocity()",
+    "h_nhc()",
+    "H_nhc()",
+    "EKF5.update_nhc()"
+  ],
+  "not_implemented_in_15a": [
+    "ZUPT",
+    "adaptive gating",
+    "map matching",
+    "HMM",
+    "turn/slip detection",
+    "R_NHC tuning",
+    "full 72-case test run",
+    "integrated AI+EKF+NHC pipeline run"
+  ],
+  "seed": 42
+}

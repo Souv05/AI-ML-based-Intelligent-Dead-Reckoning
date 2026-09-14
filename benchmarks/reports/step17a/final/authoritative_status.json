@@ -1,0 +1,11 @@
+{
+  "step": "17A",
+  "phase": "17 - AI+INS+EKF+NHC+GNSS fusion",
+  "ekf_reused_unchanged": true,
+  "nhc_reused_unchanged": true,
+  "qr_p0_retuned": false,
+  "sig_nhc_provisional": false,
+  "outage_cases_regenerated": false,
+  "phase16_winner_used": "16A GRU v2",
+  "results_authoritative": true
+}

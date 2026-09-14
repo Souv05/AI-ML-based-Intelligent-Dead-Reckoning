@@ -1,0 +1,20 @@
+{
+  "H_nhc": {
+    "name": "H_nhc",
+    "n_samples": 500,
+    "fd_eps": 1e-06,
+    "tolerance": 0.0001,
+    "max_abs_diff": 6.773191785214294e-09,
+    "mean_abs_diff": 1.7521295985895025e-09,
+    "PASS": true
+  },
+  "H_ai": {
+    "name": "H_ai",
+    "n_samples": 500,
+    "fd_eps": 1e-06,
+    "tolerance": 0.0001,
+    "max_abs_diff": 6.591534429389867e-09,
+    "mean_abs_diff": 1.7523841234177995e-09,
+    "PASS": true
+  }
+}

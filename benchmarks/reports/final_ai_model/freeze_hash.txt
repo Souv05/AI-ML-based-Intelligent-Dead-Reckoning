@@ -1,0 +1,7 @@
+SHA256:
+138557eb0c993cf1c906fe7d7dca9b185db32ba4f8d61fec9dbfadf2680e3207
+
+File: gru_v2_best.pt
+Size: 618544 bytes
+Frozen: 2026-09-10T21:40:01.887522
+MD5:    4761355bb0764145be37b13fd619533b

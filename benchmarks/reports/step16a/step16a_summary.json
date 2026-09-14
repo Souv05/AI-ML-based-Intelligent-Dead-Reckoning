@@ -1,0 +1,126 @@
+{
+  "dataset_root": "D:\\SIH 2026",
+  "protocol": "validated existing 12A/12D split (35 train / 7 val / 4 test), reused verbatim",
+  "frozen_gru_v1": {
+    "val": {
+      "RMSE": 7.063599730879962,
+      "MAE": 5.4277322244981185,
+      "R2": 0.4525495096957015,
+      "MedianAE": 4.438959121704102
+    },
+    "test": {
+      "RMSE": 5.070726776781012,
+      "MAE": 3.987608204176323,
+      "R2": 0.5709120517485426,
+      "MedianAE": 3.3281421661376953
+    },
+    "historic_test_file": {
+      "MAE": 3.9892628406038755,
+      "RMSE": 5.070741779180324,
+      "R2": 0.5709095127206887,
+      "MedianAE": 3.3284502029418945,
+      "MAE_kmh": 14.361346226173952,
+      "RMSE_kmh": 18.254670405049165
+    }
+  },
+  "best_gru_v2": {
+    "experiment_id": "GRU2-E05c-T60",
+    "val": {
+      "RMSE": 6.695856752495155,
+      "MAE": 4.817945301043333,
+      "R2": 0.507885913628143,
+      "MedianAE": 3.648716449737549
+    },
+    "test": {
+      "RMSE": 4.401556540614119,
+      "MAE": 3.4319603627486432,
+      "R2": 0.6755347408312491,
+      "MedianAE": 2.8676490783691406
+    },
+    "window_size": 60,
+    "params": 153729,
+    "model_size_mb": 0.5899,
+    "latency_ms_dev": 0.010792
+  },
+  "improvement_test": {
+    "RMSE_mps": 0.66917,
+    "MAE_mps": 0.555648,
+    "R2": 0.104623,
+    "RMSE_pct": 13.1967
+  },
+  "authoritative_conditions": {
+    "full_validated_data_used": true,
+    "original_split_preserved": true,
+    "test_leakage": false,
+    "gru_v1_checkpoint_preserved": true,
+    "no_future_information": true,
+    "causal_model": true,
+    "test_used_only_after_freeze": true,
+    "navigation_configuration_frozen": "see step16a_nav_check.py (uses frozen outputs/step14_ekf/configs/ekf_config.json)"
+  },
+  "authoritative_result": true,
+  "gru_v2_decision": "ACCEPT",
+  "test_used_during_tuning": false,
+  "baseline_modified": false,
+  "future_information": false,
+  "ekf_tuned": false,
+  "nhc_tuned": false,
+  "data_truncated": false,
+  "next_step": "16B - TCN-GRU challenger OR 16C - lightweight Transformer (user decision; do not auto-continue)",
+  "authoritative_result_note": "section 30 conditions all satisfied; nav config = frozen Step-14 ekf_config.json (nav check confirms no EKF/NHC tuning).",
+  "downstream_nav": {
+    "question": "Does GRU v2 (lower velocity RMSE) improve downstream navigation?",
+    "ekf_config": {
+      "source": "D:\\SIH 2026\\outputs\\step14_ekf\\configs\\ekf_config.json",
+      "Q_psd": [
+        8.0,
+        8.0,
+        1.0,
+        1.0,
+        0.004873878716587337
+      ],
+      "sig_gnss_m": 5.0,
+      "P0_diag": [
+        25.0,
+        25.0,
+        4.0,
+        4.0,
+        0.12184696791468343
+      ],
+      "tuned_in_16A": false
+    },
+    "n_cases_evaluated": 71,
+    "aggregate": {
+      "AI_EKF_GRUv1": {
+        "n": 72.0,
+        "median_FDE_m": 229.9313828997593,
+        "mean_FDE_m": 408.6603679971857,
+        "median_ATE_m": 123.03016711076695,
+        "median_drift_pct": 36.840774172975806,
+        "mean_drift_pct": 62.88732334871778,
+        "worst_drift_pct": 351.8728318875487,
+        "median_max_error_m": 229.9313828997593,
+        "sih_pass_rate_pct": 4.166666666666666
+      },
+      "AI_EKF_GRUv2": {
+        "n": 72.0,
+        "median_FDE_m": 177.1545817121407,
+        "mean_FDE_m": 376.7106706284222,
+        "median_ATE_m": 108.97570565441717,
+        "median_drift_pct": 36.35416838341551,
+        "mean_drift_pct": 58.60727682931854,
+        "worst_drift_pct": 292.72585045381356,
+        "median_max_error_m": 177.1545817121407,
+        "sih_pass_rate_pct": 2.7777777777777777
+      }
+    },
+    "median_FDE_change_m": -52.61935220848855,
+    "median_FDE_improvement_pct": 22.900488019091338,
+    "v2_beats_v1_case_win_rate_pct": 69.01408450704226,
+    "wilcoxon_stat": 593.0,
+    "wilcoxon_p": 8.67522407749126e-05,
+    "ekf_tuned": false,
+    "nhc_tuned": false,
+    "model_selected_on_test": false
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "input_features": [
+    "acc_x",
+    "acc_y",
+    "acc_z",
+    "gyro_x",
+    "gyro_y",
+    "gyro_z",
+    "mag_x",
+    "mag_y",
+    "mag_z",
+    "roll",
+    "pitch",
+    "yaw"
+  ],
+  "input_size": 12,
+  "feature_order_is_fixed": true,
+  "do_not_reorder": true,
+  "normalization": "per-channel z-score (see scaler.json)",
+  "source": "D:\\SIH 2026\\outputs\\step16a\\gru_v2_config.json"
+}

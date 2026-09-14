@@ -1,0 +1,24 @@
+{
+  "12b_baseline": {
+    "training_time_s": 16.60862445831299,
+    "model_file_size_bytes": 3619038,
+    "inference_ms_per_window": 0.005363486707210541,
+    "n_features": 108
+  },
+  "12bf_tuned": {
+    "training_time_s": 17.792572736740112,
+    "model_file_size_bytes": 818141,
+    "inference_ms_per_window": 0.006144866347312927,
+    "n_trees": 395,
+    "n_features": 108
+  },
+  "12a_rf_for_reference": {
+    "model_file_size_bytes": 5620436609,
+    "training_time_s": 111.70570802688599,
+    "inference_batch_size": 256,
+    "inference_time_per_sample_ms": 0.14194007962942123,
+    "device": "cpu",
+    "random_forest_backend": "sklearn_cpu"
+  },
+  "note": "Measured on this machine's CPU; not a smartphone/edge benchmark."
+}

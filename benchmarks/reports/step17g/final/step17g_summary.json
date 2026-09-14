@@ -1,0 +1,34 @@
+{
+  "step": "17G",
+  "n_outage_scenarios": 12,
+  "outage_durations_tested": [
+    10,
+    20,
+    30,
+    60,
+    90,
+    120
+  ],
+  "median_FDE_m": 249.32761623916647,
+  "median_drift_pct": 47.82891362202888,
+  "median_entry_jump_m": 0.6850367013658043,
+  "median_recovery_jump_m": 120.95063703467824,
+  "median_entry_latency_s": 0.19999999999998863,
+  "median_recovery_latency_s": 0.8999999999999915,
+  "n_loss_confirm": 3,
+  "n_reacq_confirm": 5,
+  "failure_cases": {
+    "A": true,
+    "B": true,
+    "C": true,
+    "D": true,
+    "E": true
+  },
+  "model": "GRU-v2",
+  "experiment_id": "GRU2-E05c-T60",
+  "ekf": "15C corrected 5-state EKF",
+  "nhc": true,
+  "nhc_std": 1.0,
+  "zupt": false,
+  "test_tuning": false
+}

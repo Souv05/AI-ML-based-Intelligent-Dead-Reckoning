@@ -1,0 +1,6 @@
+role,outage_duration_s,sequence_id,outage_start,delta_FDE_m
+short_outage,10.0,,,
+medium_outage,60.0,,,
+long_outage,120.0,,,
+nhc_helps_most,120.0,Vw02,45621.0,3419.109277910203
+nhc_helps_least,90.0,Vtb01,11081.0,-237.8330612407866
