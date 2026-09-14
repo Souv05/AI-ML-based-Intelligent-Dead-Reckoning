@@ -63,7 +63,7 @@ _ROOT        = Path(__file__).parent.parent
 _MODELS      = _ROOT / "models"
 _ONNX        = _MODELS / "exported" / "onnx" / "gru_v2.onnx"
 _META        = _MODELS / "gru" / "gru_v2_metadata.json"
-_ROAD_GRAPH  = _ROOT / "configs" / "road_graph.pkl"
+_ROAD_GRAPH  = _ROOT / "configs" / "road_graph.sqlite"
 
 _PUBLISH_DT = 1.0 / 10   # 10 Hz output rate
 
@@ -91,15 +91,16 @@ async def _startup() -> None:
     """Pre-build the offline router at startup using the road graph's own origin.
 
     This ensures offline routing is available even before any WebSocket client
-    connects (and before a GNSS fix is acquired).  The cold build takes ~20 s
-    but is cached on disk; subsequent restarts load the cache in ~3 s.
+    connects (and before a GNSS fix is acquired).  The SQLite-backed router
+    opens the database file without loading it into RAM, so startup is fast.
     """
     if _ROAD_GRAPH.exists():
-        import pickle as _pickle
+        import sqlite3 as _sqlite3
         try:
-            with open(_ROAD_GRAPH, "rb") as _f:
-                _payload = _pickle.load(_f)
-            _lat0, _lon0 = float(_payload["lat0"]), float(_payload["lon0"])
+            _con = _sqlite3.connect(f"file:{_ROAD_GRAPH}?mode=ro", uri=True)
+            _lat0 = float(_con.execute("SELECT value FROM meta WHERE key='lat0'").fetchone()[0])
+            _lon0 = float(_con.execute("SELECT value FROM meta WHERE key='lon0'").fetchone()[0])
+            _con.close()
         except Exception as _exc:
             log.warning("startup: could not read road graph origin: %s — skipping pre-build", _exc)
             return
@@ -114,7 +115,7 @@ async def _startup() -> None:
         ).start()
         log.info("startup: offline router build started (origin %.4f, %.4f)", _lat0, _lon0)
     else:
-        log.warning("startup: road_graph.pkl not found — offline routing unavailable")
+        log.warning("startup: road_graph.sqlite not found — offline routing unavailable")
 
 
 def _build_road_router(lat0: float, lon0: float) -> None:

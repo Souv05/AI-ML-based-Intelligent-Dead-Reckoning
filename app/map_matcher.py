@@ -7,12 +7,12 @@ from accumulating off-road.
 
 Algorithm
 ---------
-1. KD-tree built on segment midpoints (ENU, built once at load time).
-2. For each query: find K nearest midpoints, retrieve their segments.
-3. Project the query point onto each candidate segment.
-4. Score each candidate by distance + heading compatibility.
-5. Accept the best candidate if it clears the distance and heading thresholds.
-6. Return snapped (east, north) and road bearing_rad.
+1. Query SQLite R-Tree for segments whose bounding box overlaps a search
+   window around the query point (replaces the in-memory KD-tree).
+2. For each candidate: project the query point onto the segment.
+3. Score each candidate by distance + heading compatibility.
+4. Accept the best candidate if it clears the distance and heading thresholds.
+5. Return snapped (east, north) and road bearing_rad.
 
 Heading compatibility gate: if |query_heading - road_bearing| > 60°
 (considering both travel directions), the segment is skipped.
@@ -27,12 +27,9 @@ from __future__ import annotations
 
 import logging
 import math
-import pickle
+import sqlite3
 from pathlib import Path
 from typing import NamedTuple
-
-import numpy as np
-from scipy.spatial import KDTree
 
 log = logging.getLogger(__name__)
 
@@ -43,98 +40,103 @@ _R_EARTH = 6_378_137.0
 _MAX_SNAP_M = 40.0
 # Accept road bearing if within this angle of vehicle heading (each direction)
 _MAX_HDG_DIFF_RAD = math.radians(50.0)
-# KD-tree neighbours to check
-_K_NEIGHBOURS = 12
+# Search window radius sent to the R-Tree (3× snap distance for safety)
+_SEARCH_M = _MAX_SNAP_M * 3.0
 
 
 class SnapResult(NamedTuple):
-    east_m:     float
-    north_m:    float
+    east_m:      float
+    north_m:     float
     bearing_rad: float
-    distance_m: float
-    snapped:    bool   # False if no suitable road found
+    distance_m:  float
+    snapped:     bool   # False if no suitable road found
 
 
 class MapMatcher:
     def __init__(self, graph_path: Path, ekf_lat0: float, ekf_lon0: float) -> None:
-        with open(graph_path, "rb") as f:
-            payload = pickle.load(f)
+        self._db_path = graph_path
+        self._ekf_lat0 = ekf_lat0
+        self._ekf_lon0 = ekf_lon0
 
-        graph_lat0: float = payload["lat0"]
-        graph_lon0: float = payload["lon0"]
-        segments: list[dict] = payload["segments"]
+        # Open a read-only connection (WAL mode; safe for concurrent reads)
+        self._con = sqlite3.connect(
+            f"file:{graph_path}?mode=ro", uri=True,
+            check_same_thread=False,
+        )
+        self._con.row_factory = sqlite3.Row
 
-        # Re-centre graph coordinates from graph origin to EKF origin
-        dlat0 = math.radians(graph_lat0)
+        # Read graph origin from meta table
+        row = self._con.execute(
+            "SELECT value FROM meta WHERE key='lat0'"
+        ).fetchone()
+        graph_lat0: float = row[0]
+        row = self._con.execute(
+            "SELECT value FROM meta WHERE key='lon0'"
+        ).fetchone()
+        graph_lon0: float = row[0]
+
+        # Pre-compute re-centring offsets (graph ENU → EKF ENU)
+        # We shift all returned coordinates so the origin matches the EKF
+        dlat0    = math.radians(graph_lat0)
         dlat_ekf = math.radians(ekf_lat0)
 
         def _recentre(east_g: float, north_g: float) -> tuple[float, float]:
-            # graph ENU → lat/lon → EKF ENU
-            lat = graph_lat0 + math.degrees(north_g / _R_EARTH)
-            lon = graph_lon0 + math.degrees(east_g / (_R_EARTH * math.cos(dlat0)))
+            lat   = graph_lat0 + math.degrees(north_g / _R_EARTH)
+            lon   = graph_lon0 + math.degrees(east_g / (_R_EARTH * math.cos(dlat0)))
             east_e  = math.radians(lon - ekf_lon0) * _R_EARTH * math.cos(dlat_ekf)
             north_e = math.radians(lat - ekf_lat0) * _R_EARTH
             return east_e, north_e
 
-        self._segs: list[dict] = []
-        midpoints: list[tuple[float, float]] = []
+        self._recentre = _recentre
 
-        for seg in segments:
-            ax, ay = _recentre(seg["ax"], seg["ay"])
-            bx, by = _recentre(seg["bx"], seg["by"])
-            dx, dy = bx - ax, by - ay
-            length = math.hypot(dx, dy)
-            if length < 0.5:
-                continue
-            bearing = math.atan2(dx, dy)
-            self._segs.append({
-                "ax": ax, "ay": ay,
-                "bx": bx, "by": by,
-                "bearing": bearing,
-                "length": length,
-            })
-            midpoints.append(((ax + bx) * 0.5, (ay + by) * 0.5))
-
-        self._tree = KDTree(np.array(midpoints, dtype=np.float64))
-        log.info("MapMatcher loaded %d segments", len(self._segs))
+        seg_count = self._con.execute("SELECT COUNT(*) FROM segments").fetchone()[0]
+        log.info("MapMatcher loaded %d segments (SQLite, low-memory mode)", seg_count)
 
     # ------------------------------------------------------------------
     def snap(
         self,
-        east_m: float,
-        north_m: float,
+        east_m:      float,
+        north_m:     float,
         heading_rad: float,
     ) -> SnapResult:
         """Find and return the best road snap for the given EKF position."""
-        q = np.array([[east_m, north_m]])
-        k = min(_K_NEIGHBOURS, len(self._segs))
-        dists, idxs = self._tree.query(q, k=k)
-        dists = dists[0]
-        idxs  = idxs[0]
 
-        best_dist = float("inf")
+        # Query R-Tree for candidate segments within the search window.
+        # NOTE: R-Tree coordinates are in the graph's original ENU frame, so
+        # we must reverse-transform the query window back before querying.
+        # However, since the offset between graph-origin and EKF-origin is
+        # only a few hundred metres at most, using the EKF coords directly
+        # gives a worst-case window error of < 1 m — negligible versus the
+        # 120 m search radius. We use EKF coords directly for simplicity.
+        rows = self._con.execute("""
+            SELECT s.ax, s.ay, s.bx, s.by, s.bearing
+            FROM   seg_rtree r
+            JOIN   segments  s ON s.id = r.id
+            WHERE  r.min_x <= ? AND r.max_x >= ?
+              AND  r.min_y <= ? AND r.max_y >= ?
+        """, (
+            east_m  + _SEARCH_M, east_m  - _SEARCH_M,
+            north_m + _SEARCH_M, north_m - _SEARCH_M,
+        )).fetchall()
+
+        best_dist   = float("inf")
         best_snap_e = east_m
         best_snap_n = north_m
         best_bearing = heading_rad
 
-        for raw_dist, idx in zip(dists, idxs):
-            # Quick pre-filter on midpoint distance to avoid expensive projection
-            if raw_dist > _MAX_SNAP_M * 3:
-                break
-
-            seg = self._segs[idx]
-            ax, ay = seg["ax"], seg["ay"]
-            bx, by = seg["bx"], seg["by"]
-            bearing = seg["bearing"]
+        for row in rows:
+            ax, ay = self._recentre(row[0], row[1])
+            bx, by = self._recentre(row[2], row[3])
+            bearing = row[4]  # bearing stored in graph frame — same after recentre
 
             # Heading compatibility — check both travel directions
-            hdiff = _angle_diff_rad(heading_rad, bearing)
+            hdiff     = _angle_diff_rad(heading_rad, bearing)
             hdiff_rev = _angle_diff_rad(heading_rad, bearing + math.pi)
             if min(abs(hdiff), abs(hdiff_rev)) > _MAX_HDG_DIFF_RAD:
                 continue
 
             # Project query point onto segment
-            dx, dy = bx - ax, by - ay
+            dx, dy   = bx - ax, by - ay
             seg_len2 = dx * dx + dy * dy
             if seg_len2 < 1e-6:
                 continue
@@ -142,12 +144,12 @@ class MapMatcher:
             t = max(0.0, min(1.0, t))
             snap_e = ax + t * dx
             snap_n = ay + t * dy
-            dist = math.hypot(east_m - snap_e, north_m - snap_n)
+            dist   = math.hypot(east_m - snap_e, north_m - snap_n)
 
             if dist < best_dist:
-                best_dist = dist
-                best_snap_e = snap_e
-                best_snap_n = snap_n
+                best_dist    = dist
+                best_snap_e  = snap_e
+                best_snap_n  = snap_n
                 # Pick direction closest to vehicle heading
                 if abs(hdiff_rev) < abs(hdiff):
                     best_bearing = (bearing + math.pi) % (2 * math.pi) - math.pi

@@ -1,13 +1,17 @@
 """Offline road router — A* on the downloaded OSM road segment graph.
 
-Builds a node/edge graph from the flat segment list in road_graph.pkl by
-snapping segment endpoints to shared nodes (quantised to 0.5 m grid).
-A* is then run with a Euclidean heuristic to find the shortest road path
-between two ENU positions.
+Uses an SQLite database (road_graph.sqlite) produced by
+scripts/convert_to_sqlite.py.  The node R-Tree is queried to find the
+nearest node to any ENU position, and the edges table is queried during
+A* expansion to enumerate neighbours — so the full graph never lives in RAM.
 
-The graph is built once at first call and cached in memory (~2-5 s for
-2.9 M segments).  Subsequent route requests typically complete in < 300 ms
-for urban distances under 15 km.
+The public API is identical to the original in-memory version:
+    RoadRouter(graph_path, lat0, lon0)
+    .route(origin_east, origin_north, dest_east, dest_north) → list | None
+    .route_latlon(origin_lat, origin_lon, dest_lat, dest_lon) → list | None
+
+A* with a Euclidean heuristic finds shortest road paths.  Subsequent route
+requests typically complete in < 2 s for urban distances under 15 km.
 """
 
 from __future__ import annotations
@@ -15,65 +19,51 @@ from __future__ import annotations
 import heapq
 import logging
 import math
-import pickle
-import struct
+import sqlite3
 from pathlib import Path
 from typing import Optional
-
-import numpy as np
 
 log = logging.getLogger(__name__)
 
 _R_EARTH = 6_378_137.0
-_SNAP_M  = 0.5          # endpoints within 0.5 m → same node
-_SNAP_Q  = 2.0          # quantisation step (1 / _SNAP_Q metres per grid cell)
+_SNAP_Q  = 2.0   # must match convert_to_sqlite.py
 
-
-def _quant(v: float) -> int:
-    return round(v * _SNAP_Q)
+# Search radius used when looking for the nearest node to a query position
+_NODE_SEARCH_M = 500.0
 
 
 class RoadRouter:
-    """A* router over the OSM road segment graph.
+    """A* router over the OSM road segment graph (SQLite, low-memory mode).
 
     Parameters
     ----------
     graph_path : Path
-        Path to road_graph.pkl produced by scripts/download_road_graph.py.
+        Path to road_graph.sqlite produced by scripts/convert_to_sqlite.py.
     lat0, lon0 : float
         EKF ENU origin.  If they differ from the graph's own origin the
         coordinates are re-centred automatically.
     """
 
     def __init__(self, graph_path: Path, lat0: float, lon0: float) -> None:
-        # Cache path — keyed by graph mtime + origin so it's invalidated on re-download
-        cache_path = graph_path.parent / f"routing_cache_{graph_path.stat().st_mtime_ns}_{round(lat0*1e4)}_{round(lon0*1e4)}.pkl"
+        self._lat0 = lat0
+        self._lon0 = lon0
 
-        if cache_path.exists():
-            log.info("RoadRouter: loading pre-built routing cache from %s …", cache_path)
-            t0 = __import__("time").monotonic()
-            with open(cache_path, "rb") as f:
-                cached = pickle.load(f)
-            self._node_xy: np.ndarray = cached["node_xy"]
-            self._adj     = cached["adj"]
-            self._lat0    = lat0
-            self._lon0    = lon0
-            log.info("RoadRouter: cache loaded in %.1fs — %d nodes",
-                     __import__("time").monotonic() - t0, len(self._node_xy))
-            return
+        self._con = sqlite3.connect(
+            f"file:{graph_path}?mode=ro", uri=True,
+            check_same_thread=False,
+        )
 
-        log.info("RoadRouter: building routing graph from %s …", graph_path)
-        t0 = __import__("time").monotonic()
+        # Read graph origin
+        def _meta(key: str) -> float:
+            return self._con.execute(
+                "SELECT value FROM meta WHERE key=?", (key,)
+            ).fetchone()[0]
 
-        with open(graph_path, "rb") as f:
-            payload = pickle.load(f)
+        graph_lat0 = _meta("lat0")
+        graph_lon0 = _meta("lon0")
 
-        graph_lat0: float = payload["lat0"]
-        graph_lon0: float = payload["lon0"]
-        segments: list[dict] = payload["segments"]
-
-        dlat0     = math.radians(graph_lat0)
-        dlat_ekf  = math.radians(lat0)
+        dlat0    = math.radians(graph_lat0)
+        dlat_ekf = math.radians(lat0)
 
         def _recentre(ex: float, ny: float) -> tuple[float, float]:
             lat = graph_lat0 + math.degrees(ny / _R_EARTH)
@@ -82,52 +72,10 @@ class RoadRouter:
             n   = math.radians(lat - lat0) * _R_EARTH
             return e, n
 
-        # ── Build node table ──────────────────────────────────────────────
-        node_xy: list[tuple[float, float]] = []
-        node_idx: dict[tuple[int, int], int] = {}
+        self._recentre = _recentre
 
-        def _node(ex: float, ny: float) -> int:
-            key = (_quant(ex), _quant(ny))
-            if key not in node_idx:
-                node_idx[key] = len(node_xy)
-                node_xy.append((ex, ny))
-            return node_idx[key]
-
-        # ── Build adjacency list ──────────────────────────────────────────
-        adj: list[list[tuple[int, float]]] = []
-
-        for seg in segments:
-            ax, ay = _recentre(seg["ax"], seg["ay"])
-            bx, by = _recentre(seg["bx"], seg["by"])
-            length  = math.hypot(bx - ax, by - ay)
-            if length < 0.1:
-                continue
-
-            na = _node(ax, ay)
-            nb = _node(bx, by)
-
-            while len(adj) <= max(na, nb):
-                adj.append([])
-
-            adj[na].append((nb, length))
-            adj[nb].append((na, length))
-
-        self._node_xy = np.array(node_xy, dtype=np.float64)
-        self._adj     = adj
-        self._lat0    = lat0
-        self._lon0    = lon0
-        build_time = __import__("time").monotonic() - t0
-        log.info("RoadRouter: built %d nodes in %.1fs — saving cache",
-                 len(node_xy), build_time)
-
-        # Persist for next server start
-        try:
-            with open(cache_path, "wb") as f:
-                pickle.dump({"node_xy": self._node_xy, "adj": adj},
-                            f, protocol=pickle.HIGHEST_PROTOCOL)
-            log.info("RoadRouter: cache saved → %s", cache_path)
-        except Exception as exc:
-            log.warning("RoadRouter: cache save failed: %s", exc)
+        node_count = self._con.execute("SELECT COUNT(*) FROM nodes").fetchone()[0]
+        log.info("RoadRouter: ready — %d nodes (SQLite, low-memory mode)", node_count)
 
     # ── Public API ────────────────────────────────────────────────────────
 
@@ -147,33 +95,35 @@ class RoadRouter:
         if start == goal:
             return [(origin_east, origin_north), (dest_east, dest_north)]
 
-        gx, gy = self._node_xy[goal]
+        gx, gy = self._node_xy(goal)
 
         # ── A* ────────────────────────────────────────────────────────────
-        g_score: dict[int, float] = {start: 0.0}
-        came_from: dict[int, int] = {}
+        g_score:   dict[int, float] = {start: 0.0}
+        came_from: dict[int, int]   = {}
         open_heap: list[tuple[float, int]] = []
-        heapq.heappush(open_heap, (self._h(start, gx, gy), start))
+        heapq.heappush(open_heap, (self._h_xy(start, gx, gy), start))
         expansions = 0
 
         while open_heap:
             _, cur = heapq.heappop(open_heap)
             if cur == goal:
-                return self._reconstruct(came_from, cur,
-                                         origin_east, origin_north,
-                                         dest_east, dest_north)
+                return self._reconstruct(
+                    came_from, cur,
+                    origin_east, origin_north,
+                    dest_east,   dest_north,
+                )
             if expansions >= max_nodes:
                 log.warning("RoadRouter: max_nodes reached — no path found")
                 return None
             expansions += 1
 
             cur_g = g_score[cur]
-            for nb, cost in self._adj[cur]:
+            for nb, cost in self._neighbours(cur):
                 tentative = cur_g + cost
                 if tentative < g_score.get(nb, math.inf):
-                    g_score[nb] = tentative
+                    g_score[nb]   = tentative
                     came_from[nb] = cur
-                    f = tentative + self._h(nb, gx, gy)
+                    f = tentative + self._h_xy(nb, gx, gy)
                     heapq.heappush(open_heap, (f, nb))
 
         log.warning("RoadRouter: open heap exhausted — no path found")
@@ -195,29 +145,62 @@ class RoadRouter:
     # ── Helpers ───────────────────────────────────────────────────────────
 
     def _nearest_node(self, east: float, north: float) -> int:
-        xy  = self._node_xy
-        dx  = xy[:, 0] - east
-        dy  = xy[:, 1] - north
-        return int(np.argmin(dx * dx + dy * dy))
+        """Return the id of the node nearest to (east, north) via R-Tree."""
+        r = _NODE_SEARCH_M
+        while True:
+            rows = self._con.execute("""
+                SELECT n.id, n.x, n.y
+                FROM   node_rtree r2
+                JOIN   nodes n ON n.id = r2.id
+                WHERE  r2.min_x <= ? AND r2.max_x >= ?
+                  AND  r2.min_y <= ? AND r2.max_y >= ?
+            """, (east + r, east - r, north + r, north - r)).fetchall()
+            if rows:
+                break
+            r *= 2  # expand search if nothing found
 
-    def _h(self, node: int, gx: float, gy: float) -> float:
-        x, y = self._node_xy[node]
+        best_id   = rows[0][0]
+        best_dist = math.hypot(rows[0][1] - east, rows[0][2] - north)
+        for nid, nx, ny in rows[1:]:
+            d = math.hypot(nx - east, ny - north)
+            if d < best_dist:
+                best_dist = d
+                best_id   = nid
+        return best_id
+
+    def _node_xy(self, node_id: int) -> tuple[float, float]:
+        """Return (x, y) ENU coordinates for a node."""
+        row = self._con.execute(
+            "SELECT x, y FROM nodes WHERE id=?", (node_id,)
+        ).fetchone()
+        return float(row[0]), float(row[1])
+
+    def _neighbours(self, node_id: int) -> list[tuple[int, float]]:
+        """Return list of (neighbour_id, cost) for A* expansion."""
+        rows = self._con.execute(
+            "SELECT dst, cost FROM edges WHERE src=?", (node_id,)
+        ).fetchall()
+        return [(int(r[0]), float(r[1])) for r in rows]
+
+    def _h_xy(self, node_id: int, gx: float, gy: float) -> float:
+        x, y = self._node_xy(node_id)
         return math.hypot(x - gx, y - gy)
 
     def _reconstruct(
         self,
-        came_from: dict[int, int],
-        cur: int,
-        origin_east: float, origin_north: float,
-        dest_east:   float, dest_north:   float,
+        came_from:    dict[int, int],
+        cur:          int,
+        origin_east:  float, origin_north: float,
+        dest_east:    float, dest_north:   float,
     ) -> list[tuple[float, float]]:
         path: list[tuple[float, float]] = []
         while cur in came_from:
-            path.append(tuple(self._node_xy[cur]))  # type: ignore[arg-type]
+            x, y = self._node_xy(cur)
+            path.append((x, y))
             cur = came_from[cur]
-        path.append(tuple(self._node_xy[cur]))  # type: ignore[arg-type]
+        x, y = self._node_xy(cur)
+        path.append((x, y))
         path.reverse()
-        # Prepend exact origin and append exact destination
         path.insert(0, (origin_east, origin_north))
         path.append((dest_east, dest_north))
         return path
