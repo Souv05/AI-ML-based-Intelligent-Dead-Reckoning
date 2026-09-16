@@ -7,8 +7,7 @@ Phone -> server  (JSON, each IMU tick ~50 Hz):
   "mag_x": float,   "mag_y": float,   "mag_z": float,    // uT
   "roll": float,    "pitch": float,   "yaw": float,      // degrees
   "lat": float,     "lon": float,
-  "heading_deg": float,              // compass/IMU heading (degrees)
-  "gnss_heading_deg": float,         // GPS course-over-ground (degrees); send 0 when unavailable
+  "heading_deg": float,
   "gnss_speed_ms": float,
   "gnss_accuracy_m": float,
   "gnss_valid": bool,
@@ -92,8 +91,6 @@ async def ws_navigation(ws: WebSocket) -> None:
     _gnss_bad_streak  = 0
     _gnss_good_streak = 0
     _gnss_debounced   = False
-    _gnss_was_valid   = False   # tracks previous debounced state for reacquisition detection
-    _reacq_fixes_left = 0       # countdown for inflated R during reacquisition blending
 
     try:
         async for raw in ws.iter_text():
@@ -139,15 +136,8 @@ async def ws_navigation(ws: WebSocket) -> None:
             lat          = float(msg.get("lat", 0))
             lon          = float(msg.get("lon", 0))
             gnss_speed   = float(msg.get("gnss_speed_ms", 0))
-            # Fix 3: floor accuracy at 8 m — Android often over-reports precision
-            gnss_acc     = max(float(msg.get("gnss_accuracy_m", 50)), 8.0)
+            gnss_acc     = float(msg.get("gnss_accuracy_m", 50))
             gnss_hdg_deg = float(msg.get("gnss_heading_deg", 0))
-
-            # Fix 2: detect reacquisition — inflate position noise for first 5 fixes
-            # so the EKF blends back gradually instead of snapping
-            if gnss_valid and not _gnss_was_valid:
-                _reacq_fixes_left = 5
-            _gnss_was_valid = gnss_valid
 
             if not ekf.initialised and gnss_valid and (lat != 0.0 or lon != 0.0):
                 ekf.init_from_gnss(lat, lon, heading_deg, gnss_speed, gnss_acc)
@@ -186,33 +176,23 @@ async def ws_navigation(ws: WebSocket) -> None:
                     ekf.update_zupt()
 
                 if gnss_valid and (lat != 0.0 or lon != 0.0):
-                    # Fix 2: ramp down inflated reacquisition noise over first 5 fixes
-                    if _reacq_fixes_left > 0:
-                        blend_acc = gnss_acc + 20.0 * (_reacq_fixes_left / 5)
-                        _reacq_fixes_left -= 1
-                    else:
-                        blend_acc = gnss_acc
-                    ekf.update_gnss_position(lat, lon, blend_acc)
+                    ekf.update_gnss_position(lat, lon, gnss_acc)
                     ekf.update_gnss_speed(gnss_speed)
                     if gnss_speed > 1.5 and gnss_hdg_deg > 0:
                         ekf.update_gnss_heading(math.radians(gnss_hdg_deg))
 
-                # Fix 1: map-matching runs in all modes.
-                # During GNSS_AIDED: loose snap noise (15 m) so GNSS dominates but
-                # lateral drift is still gently penalised via road bearing.
-                # During DR_ACTIVE: tight snap noise (3 m) as primary position anchor.
+                # ── Map matching (DR mode only) ───────────────────────────
                 snapped = False
                 matcher = _matcher_holder[0]
-                if matcher is not None:
+                if matcher is not None and not gnss_valid:
                     snap = matcher.snap(ekf.east_m, ekf.north_m, math.radians(ekf.heading_deg))
                     if snap.snapped:
-                        snap_noise = 3.0 if not gnss_valid else 15.0
                         ekf.update_gnss_position(
                             ekf.lat0 + math.degrees(snap.north_m / 6_378_137.0),
                             ekf.lon0 + math.degrees(
                                 snap.east_m / (6_378_137.0 * math.cos(math.radians(ekf.lat0)))
                             ),
-                            snap_noise,
+                            3.0,
                         )
                         ekf.update_road_bearing(snap.bearing_rad)
                         snapped = True
@@ -221,9 +201,6 @@ async def ws_navigation(ws: WebSocket) -> None:
             if not ekf.initialised:
                 mode        = "GNSS_REACQUIRE"
                 gnss_health = "OUTAGE"
-            elif gnss_valid and _reacq_fixes_left > 0:
-                mode        = "GNSS_REACQUIRE"   # blending back — not yet fully aided
-                gnss_health = "DEGRADED"
             elif gnss_valid:
                 mode        = "GNSS_AIDED"
                 gnss_health = "OK"
