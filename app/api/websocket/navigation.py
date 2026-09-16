@@ -236,3 +236,5 @@ async def ws_navigation(ws: WebSocket) -> None:
     except Exception as exc:
         log.exception("Error in ws_navigation: %s", exc)
         await ws.close(code=1011)
+
+
