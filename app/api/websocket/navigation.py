@@ -26,7 +26,14 @@ Server -> phone  (JSON, ~10 Hz):
   "gnss_valid": bool,
   "gnss_health": "OK" | "DEGRADED" | "OUTAGE",
   "position_std_m": float,
-  "sample_index": int
+  "map_matched": bool,
+  "sample_index": int,
+  "alignment": {
+    "state": "UNCALIBRATED" | "STATIC_DONE" | "CALIBRATED",
+    "yaw_offset_deg": float,
+    "pitch_offset_deg": float,
+    "roll_offset_deg": float
+  }
 }
 """
 
@@ -45,6 +52,7 @@ from app.core.fusion.ekf_fusion import EKFFusion
 from app.core.inference.gru_engine import GRUEngine
 from app.core.map.map_matcher import MapMatcher
 from app.core.preprocessing.imu_filter import ImuFilter
+from app.core.sensors.alignment import PhoneAligner
 
 log = logging.getLogger(__name__)
 
@@ -53,9 +61,10 @@ async def ws_navigation(ws: WebSocket) -> None:
     await ws.accept()
     log.info("Client connected: %s", ws.client)
 
-    gru  = GRUEngine(state.ONNX_PATH, state.META_PATH)
-    ekf  = EKFFusion()
-    filt = ImuFilter()
+    gru     = GRUEngine(state.ONNX_PATH, state.META_PATH)
+    ekf     = EKFFusion()
+    filt    = ImuFilter()
+    aligner = PhoneAligner()
 
     # Map matcher: loaded in a background thread (2.9M segments take ~8s to index).
     # Once ready, _matcher_holder[0] is set atomically — no lock needed (GIL).
@@ -114,14 +123,29 @@ async def ws_navigation(ws: WebSocket) -> None:
                 gru.reset()
                 log.debug("Pothole detected — GRU window reset")
 
-            # ── Stage 2: GRU speed estimate ───────────────────────────────
-            result = gru.push(*filtered)
+            # ── Stage 1b: phone-to-vehicle alignment ──────────────────────
+            # Static phase: feed gravity while confirmed stationary (ZUPT check)
+            _fa_x, _fa_y, _fa_z = filtered[0], filtered[1], filtered[2]
+            _fg_x, _fg_y, _fg_z = filtered[3], filtered[4], filtered[5]
+            _gyro_mag_raw = math.sqrt(_fg_x**2 + _fg_y**2 + _fg_z**2)
+            _accel_mag    = math.sqrt(_fa_x**2 + _fa_y**2 + _fa_z**2)
+            _is_stationary = abs(_accel_mag - 9.81) < 0.5 and _gyro_mag_raw < 0.08
+            if _is_stationary:
+                aligner.push_static(_fa_x, _fa_y, _fa_z, _gyro_mag_raw)
+
+            # Rotate filtered IMU into vehicle frame once static phase is done
+            v_acc  = aligner.transform_acc(*filtered[:3])
+            v_gyro = aligner.transform_gyro(*filtered[3:6])
+            aligned = list(v_acc) + list(v_gyro) + list(filtered[6:])
+
+            # ── Stage 2: GRU speed estimate (vehicle-frame IMU) ───────────
+            result = gru.push(*aligned)
             if result is not None:
                 gru_speed = result
 
             # ── Stage 3: EKF predict + update ────────────────────────────
             heading_deg    = float(msg.get("heading_deg", ekf.heading_deg))
-            heading_rad    = math.radians(heading_deg)
+            heading_rad    = aligner.correct_heading(math.radians(heading_deg))
             gnss_valid_raw = bool(msg.get("gnss_valid", False))
 
             if gnss_valid_raw:
@@ -195,6 +219,8 @@ async def ws_navigation(ws: WebSocket) -> None:
                     ekf.update_gnss_speed(gnss_speed)
                     if gnss_speed > 1.5 and gnss_hdg_deg > 0:
                         ekf.update_gnss_heading(math.radians(gnss_hdg_deg))
+                        # Dynamic alignment: compare corrected IMU heading vs GPS CoG
+                        aligner.push_dynamic(heading_rad, math.radians(gnss_hdg_deg), gnss_speed)
 
                 # Fix 1: map-matching runs in all modes.
                 # GNSS_AIDED: loose noise (15 m) so GNSS dominates but lateral
@@ -238,19 +264,20 @@ async def ws_navigation(ws: WebSocket) -> None:
             sample_index += 1
 
             await ws.send_text(json.dumps({
-                "lat":            ekf.lat,
-                "lon":            ekf.lon,
-                "east_m":         round(ekf.east_m,      2),
-                "north_m":        round(ekf.north_m,     2),
-                "speed_fwd":      round(ekf.speed_ms,    3),
-                "heading_deg":    round(ekf.heading_deg, 1),
-                "gru_speed":      round(gru_speed,       3),
-                "mode":           mode,
-                "gnss_valid":     gnss_valid,
-                "gnss_health":    gnss_health,
-                "position_std_m": round(ekf.pos_std_m,   1),
-                "map_matched":    snapped,
-                "sample_index":   sample_index,
+                "lat":              ekf.lat,
+                "lon":              ekf.lon,
+                "east_m":           round(ekf.east_m,      2),
+                "north_m":          round(ekf.north_m,     2),
+                "speed_fwd":        round(ekf.speed_ms,    3),
+                "heading_deg":      round(ekf.heading_deg, 1),
+                "gru_speed":        round(gru_speed,       3),
+                "mode":             mode,
+                "gnss_valid":       gnss_valid,
+                "gnss_health":      gnss_health,
+                "position_std_m":   round(ekf.pos_std_m,   1),
+                "map_matched":      snapped,
+                "sample_index":     sample_index,
+                "alignment":        aligner.as_dict(),
             }))
 
     except WebSocketDisconnect:
