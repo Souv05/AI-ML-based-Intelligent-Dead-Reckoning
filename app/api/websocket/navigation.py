@@ -209,6 +209,14 @@ async def ws_navigation(ws: WebSocket) -> None:
                     ekf.update_zupt()
 
                 if gnss_valid and (lat != 0.0 or lon != 0.0):
+                    # Gap C: large-drift re-init — if EKF has drifted > 80 m from
+                    # the incoming GPS fix, blending cannot recover gracefully.
+                    # Re-initialise the EKF position from the GPS fix instead.
+                    if ekf.gnss_position_error_m(lat, lon) > 80.0:
+                        ekf.init_from_gnss(lat, lon, ekf.heading_deg, ekf.speed_ms, gnss_acc)
+                        _reacq_fixes_left = 5
+                        log.info("Large drift detected — EKF position re-initialised from GNSS")
+
                     # Fix 2: ramp down inflated reacquisition noise over first 5 fixes
                     if _reacq_fixes_left > 0:
                         blend_acc = gnss_acc + 20.0 * (_reacq_fixes_left / 5)

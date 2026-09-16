@@ -68,6 +68,8 @@ class EKFFusion:
         speed_ms: float,
         accuracy_m: float,
     ) -> None:
+        # Gap D: floor accuracy — Android can report 3-5 m even with poor geometry
+        accuracy_m = max(accuracy_m, 8.0)
         self.lat0 = lat
         self.lon0 = lon
         lat0_rad = math.radians(lat)
@@ -141,6 +143,15 @@ class EKFFusion:
         innovation = speed_ms - self.x[3]
         self._scalar_update(H, innovation, _R_GRU_SPD_M2S2)
         self.x[3] = max(self.x[3], 0.0)  # speed cannot be negative
+
+    def gnss_position_error_m(self, lat: float, lon: float) -> float:
+        """Return distance (m) between current EKF position and a GPS fix."""
+        if not self.initialised or self.lat0 is None:
+            return 0.0
+        lat0_rad = math.radians(self.lat0)
+        meas_east  = math.radians(lon - self.lon0) * _R_EARTH * math.cos(lat0_rad)
+        meas_north = math.radians(lat - self.lat0) * _R_EARTH
+        return float(math.hypot(meas_east - self.x[0], meas_north - self.x[1]))
 
     def update_gnss_position(
         self, lat: float, lon: float, accuracy_m: float
