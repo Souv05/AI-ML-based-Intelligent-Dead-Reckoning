@@ -54,6 +54,9 @@ from app.core.map.map_matcher import MapMatcher
 from app.core.preprocessing.imu_filter import ImuFilter
 from app.core.sensors.alignment import PhoneAligner
 
+# Navigation Core — sensor-agnostic layer
+from navigation_core.imu.phone_adapter import PhoneIMUAdapter
+
 log = logging.getLogger(__name__)
 
 
@@ -61,10 +64,11 @@ async def ws_navigation(ws: WebSocket) -> None:
     await ws.accept()
     log.info("Client connected: %s", ws.client)
 
-    gru     = GRUEngine(state.ONNX_PATH, state.META_PATH)
-    ekf     = EKFFusion()
-    filt    = ImuFilter()
-    aligner = PhoneAligner()
+    gru          = GRUEngine(state.ONNX_PATH, state.META_PATH)
+    ekf          = EKFFusion()
+    filt         = ImuFilter()
+    aligner      = PhoneAligner()
+    phone_adapter = PhoneIMUAdapter()    # converts raw JSON → StandardIMUSample
 
     # Map matcher: loaded in a background thread (2.9M segments take ~8s to index).
     # Once ready, _matcher_holder[0] is set atomically — no lock needed (GIL).
@@ -111,12 +115,20 @@ async def ws_navigation(ws: WebSocket) -> None:
             dt  = (now - last_imu_t) if last_imu_t is not None else 0.02
             last_imu_t = now
 
+            # ── Stage 0: phone adapter → StandardIMUSample ────────────────
+            # Converts raw phone JSON to sensor-agnostic StandardIMUSample.
+            # The rest of the pipeline only sees StandardIMUSample fields.
+            std_sample = phone_adapter.convert(msg)
+            dt = std_sample.dt   # use real dt from adapter timestamps
+
             # ── Stage 1: low-pass filter + pothole detection ──────────────
             raw_sample = [
-                float(msg.get("acc_x",  0)), float(msg.get("acc_y",  0)), float(msg.get("acc_z",  0)),
-                float(msg.get("gyro_x", 0)), float(msg.get("gyro_y", 0)), float(msg.get("gyro_z", 0)),
-                float(msg.get("mag_x",  0)), float(msg.get("mag_y",  0)), float(msg.get("mag_z",  0)),
-                float(msg.get("roll",   0)), float(msg.get("pitch",  0)), float(msg.get("yaw",    0)),
+                std_sample.ax, std_sample.ay, std_sample.az,
+                std_sample.gx, std_sample.gy, std_sample.gz,
+                std_sample.mx, std_sample.my, std_sample.mz,
+                std_sample.roll  if not math.isnan(std_sample.roll)  else 0.0,
+                std_sample.pitch if not math.isnan(std_sample.pitch) else 0.0,
+                std_sample.yaw   if not math.isnan(std_sample.yaw)   else 0.0,
             ]
             filtered, pothole = filt.push(raw_sample)
             if pothole:
