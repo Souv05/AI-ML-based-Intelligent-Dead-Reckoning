@@ -73,7 +73,7 @@ class PhoneAligner:
         """
         if self.state != AlignState.UNCALIBRATED:
             return
-        if gyro_mag >= 0.05:
+        if gyro_mag >= 0.08:
             return
         self._static_buf.append([acc_x, acc_y, acc_z])
         if len(self._static_buf) >= _STATIC_N_SAMPLES:

@@ -238,10 +238,10 @@ async def ws_navigation(ws: WebSocket) -> None:
                         blend_acc = gnss_acc
                     ekf.update_gnss_position(lat, lon, blend_acc)
                     ekf.update_gnss_speed(gnss_speed)
-                    if gnss_speed > 1.5 and gnss_hdg_deg > 0:
+                    if gnss_speed > 1.5:
                         ekf.update_gnss_heading(math.radians(gnss_hdg_deg))
-                        # Dynamic alignment: compare corrected IMU heading vs GPS CoG
-                        aligner.push_dynamic(heading_rad, math.radians(gnss_hdg_deg), gnss_speed)
+                        if gnss_hdg_deg != 0.0:
+                            aligner.push_dynamic(heading_rad, math.radians(gnss_hdg_deg), gnss_speed)
 
                 # Fix 1: map-matching runs in all modes.
                 # GNSS_AIDED: loose noise (15 m) so GNSS dominates but lateral
