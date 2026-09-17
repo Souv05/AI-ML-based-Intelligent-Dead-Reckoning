@@ -86,7 +86,8 @@ async def ws_navigation(ws: WebSocket) -> None:
             log.info("Loading road graph in background …")
             m = MapMatcher(state.ROAD_GRAPH, lat0, lon0)
             _matcher_holder[0] = m
-            log.info("Map matcher ready — %d segments indexed", len(m._segs))
+            seg_count = m._con.execute("SELECT COUNT(*) FROM segments").fetchone()[0]
+            log.info("Map matcher ready — %d segments indexed", seg_count)
         except Exception as exc:
             log.warning("Map matcher failed: %s", exc)
 
