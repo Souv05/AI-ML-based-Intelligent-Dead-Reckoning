@@ -9,6 +9,21 @@ dist/
 *.egg
 .eggs/
 
+# ── Non-runtime directories (not deployed to Render) ─────────────────────────
+training/
+benchmarks/
+demo/
+docs/
+field_tests/
+replay/
+tests/
+scripts/
+conftest.py
+
+# ── Model checkpoints (large; only ONNX export is needed at runtime) ──────────
+models/gru/*.pt
+models/gru/*.pth
+
 # Virtual environments
 .venv/
 venv/
