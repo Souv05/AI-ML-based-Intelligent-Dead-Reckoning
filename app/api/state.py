@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 import threading
 import urllib.request
 from pathlib import Path
@@ -56,6 +57,20 @@ def build_road_router(lat0: float, lon0: float) -> None:
         router_loading = False
 
 
+def _download_file(url: str, dest: Path) -> None:
+    """Download url → dest, handling Google Drive large-file confirmation."""
+    _GDRIVE_RE = re.compile(
+        r"https://drive\.google\.com/(?:file/d/|open\?id=|uc\?.*id=)([\w-]+)"
+    )
+    m = _GDRIVE_RE.search(url)
+    if m:
+        file_id = m.group(1)
+        import gdown  # noqa: PLC0415  (runtime import — not a startup dep)
+        gdown.download(id=file_id, output=str(dest), quiet=False, fuzzy=True)
+    else:
+        urllib.request.urlretrieve(url, dest)
+
+
 def _ensure_road_graph() -> None:
     """Download road_graph.sqlite from ROAD_GRAPH_URL if not already present.
 
@@ -78,7 +93,7 @@ def _ensure_road_graph() -> None:
     ROAD_GRAPH.parent.mkdir(parents=True, exist_ok=True)
     tmp = ROAD_GRAPH.with_suffix(".tmp")
     try:
-        urllib.request.urlretrieve(ROAD_GRAPH_URL, tmp)
+        _download_file(ROAD_GRAPH_URL, tmp)
         tmp.rename(ROAD_GRAPH)
         size_mb = ROAD_GRAPH.stat().st_size / 1_048_576
         log.info("Road graph downloaded: %.1f MB → %s", size_mb, ROAD_GRAPH)
