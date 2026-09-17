@@ -1,5 +1,0 @@
-sequence_id,reference_distance_m,predicted_distance_m,abs_distance_error_m,distance_error_pct
-Vta08,3385.1,3849.2,464.1,13.71
-Vta28,3909.6,4662.0,752.3,19.24
-Vtb01,39449.0,39826.5,377.5,0.96
-Vw02,98575.8,66276.4,32299.4,32.77

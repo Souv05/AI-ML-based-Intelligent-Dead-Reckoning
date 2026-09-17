@@ -1,9 +1,0 @@
-{
-  "n_confirm_tuned": 2,
-  "g_max_degraded_tuned": 0.0,
-  "n_confirm_default": 5,
-  "g_max_degraded_default": 0.35,
-  "selected_on": "validation only, 7 sequences x [20, 60] durations, 28 cases",
-  "selection_metric": "median_FDE_m, then mean_transitions_per_case",
-  "frozen": true
-}

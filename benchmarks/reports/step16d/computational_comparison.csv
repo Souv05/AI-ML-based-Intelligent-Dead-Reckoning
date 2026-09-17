@@ -1,4 +1,0 @@
-model,params,file_size_kb,window_T,inference_ms_batched,inference_ms_single_cpu,edge_budget_eligible,training_time_s,note
-GRU_v2,153729,604.0,60,0.0108,,False,,Same GRU architecture as v1; larger T=60 window
-TCN_GRU,17434,76.7,40,1.1879,2.2459,True,13.5,TCN convolutions O(T); edge-budget eligible
-Transformer,19746,122.4,20,15.4963,1.1658,True,28.1,Self-attention O(T^2); edge-budget eligible at T=20

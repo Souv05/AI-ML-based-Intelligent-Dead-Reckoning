@@ -1,9 +1,0 @@
-{
-  "environment": "desktop CPU benchmark (NOT Android/edge)",
-  "train_time_s_xgboost": 15.51,
-  "n_test_samples": 86331,
-  "inference_ms_per_sample": 0.00046,
-  "throughput_samples_per_s": 2159487.0,
-  "model_json_bytes": 1719700,
-  "n_trees_used": 186
-}

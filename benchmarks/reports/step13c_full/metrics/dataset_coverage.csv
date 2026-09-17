@@ -1,5 +1,0 @@
-sequence_id,split,rows,duration_s,number_of_valid_outages,number_of_skipped_outages,skip_reasons
-Vta08,test,3676,367.5,18,8272,"{""start_speed<5_kmh"": 5196, ""no_gnss_at_start"": 3076}"
-Vta28,test,4210,420.9,18,7686,"{""no_gnss_at_start"": 5484, ""start_speed<5_kmh"": 2202}"
-Vtb01,test,32459,3245.8,18,83415,"{""start_speed<5_kmh"": 19247, ""logging_gap_in_span"": 210, ""no_gnss_at_start"": 37936, ""missing_window_in_span"": 26022}"
-Vw02,test,52712,5271.1,18,93473,"{""start_speed<5_kmh"": 20286, ""no_gnss_at_start"": 73187}"

@@ -1,8 +1,0 @@
-{
-  "parameter_count": 24929,
-  "model_size_bytes": 123176,
-  "training_time_s": 142.33114350000005,
-  "inference_ms_per_window": 2.033027000002221,
-  "device": "CPU",
-  "note": "Development-machine benchmark; NOT smartphone/edge benchmark."
-}

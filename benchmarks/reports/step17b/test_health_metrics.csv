@@ -1,5 +1,0 @@
-sequence_id,precision,recall,f1,outage_recall,outage_precision,n,n_true_degraded,n_true_outage,n_pred_healthy,n_pred_degraded,n_pred_outage
-Vta08,0.8036,1.0,0.8911,1.0,0.7826,3700,360,180,3028,442,230
-Vta28,0.6916,1.0,0.8177,1.0,0.7207,4300,225,80,3859,330,111
-Vtb01,0.8384,1.0,0.9121,1.0,0.8955,10000,910,600,8199,1131,670
-Vw02,0.8276,1.0,0.9057,1.0,0.9238,15000,1010,800,12813,1321,866

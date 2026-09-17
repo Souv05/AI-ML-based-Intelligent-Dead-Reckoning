@@ -1,9 +1,0 @@
-{
-  "hidden_size": 128,
-  "num_layers": 2,
-  "learning_rate": 0.0005,
-  "dropout": 0.2,
-  "weight_decay": 0.0001,
-  "selected_by": "validation_RMSE, then validation_MAE, then parameter_count",
-  "best_epoch_from_tuning": 2
-}

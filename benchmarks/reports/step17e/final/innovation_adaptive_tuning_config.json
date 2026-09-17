@@ -1,8 +1,0 @@
-{
-  "nis_healthy": 12.5,
-  "nis_outage": 50.0,
-  "ema_tau_s": 3.0,
-  "selected_on": "4 validation-only cases (non-overlapping windows on the 4 test sequences -- see Section 15 caveat), NOT the frozen 72-case test list",
-  "selection_metric": "median_FDE_m, then mean_transitions",
-  "frozen": true
-}

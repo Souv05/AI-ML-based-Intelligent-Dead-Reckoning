@@ -1,2 +1,0 @@
-﻿# Demo entry point
-

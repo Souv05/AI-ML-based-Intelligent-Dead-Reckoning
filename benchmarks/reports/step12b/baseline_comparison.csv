@@ -1,7 +1,0 @@
-model,split,MAE,RMSE,R2,MedianAE,MAE_kmh
-Baseline 0 (mean),validation,9.1455,10.6439,-0.2431,9.8564,32.9239
-RandomForest (12A),validation,6.8759,8.4082,0.2243,6.7234,24.7533
-XGBoost (12B),validation,6.2793,7.7327,0.3439,5.8239,22.6055
-Baseline 0 (mean),test,7.3641,8.6696,-0.2543,7.4075,26.5108
-RandomForest (12A),test,6.5718,8.3426,-0.1615,5.5772,23.6584
-XGBoost (12B),test,5.8081,7.4221,0.0807,4.8066,20.9091

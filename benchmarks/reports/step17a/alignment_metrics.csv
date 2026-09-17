@@ -1,5 +1,0 @@
-sequence_id,heading_mae_after_deg,heading_rmse_after_deg,heading_median_ae_after_deg,heading_p95_ae_after_deg,heading_mae_before_deg,yaw_offset_deg,confidence_overall,status
-Vta08,85.5389,96.8628,90.8453,161.9071,93.3262,163.8203,0.6092,ALIGNED
-Vta28,77.8782,100.5925,59.681,175.8664,102.0501,-178.4733,0.6086,ALIGNED
-Vtb01,67.1648,85.7528,49.8005,165.9795,112.2539,-170.2585,0.6173,ALIGNED
-Vw02,20.7266,28.1682,15.6578,57.9075,144.7481,151.5663,0.8519,ALIGNED
