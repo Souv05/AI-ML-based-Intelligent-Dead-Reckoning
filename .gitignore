@@ -1,4 +1,68 @@
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+*.egg
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# ── Secrets / credentials ─────────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.p12
+*.pfx
+
+# ── Training data ─────────────────────────────────────────────────────────────
+# Raw sensor datasets — too large for Git, store on Drive/HuggingFace
 training/datasets/
-benchmarks/reports/step12a/initial_baseline_model.joblib
+
+# ── Model checkpoints ─────────────────────────────────────────────────────────
+# Keep exported ONNX (0.6 MB) but not raw PyTorch checkpoints (600 MB+)
+models/**/*.pt
+models/**/*.pth
+models/**/*.h5
+models/**/*.ckpt
+models/**/*.bin
+# Exception: allow tiny metadata/config JSON inside models/
+!models/**/*.json
+
+# ── Road graph & routing caches ───────────────────────────────────────────────
+# SQLite files are 100–800 MB — host on GitHub Releases, download via ROAD_GRAPH_URL
+configs/road_graph*.sqlite
+configs/road_graph*.sqlite-wal
+configs/road_graph*.sqlite-shm
+configs/road_graph*.tmp
 configs/routing_cache_*.pkl
+# Legacy pkl format
 configs/road_graph.pkl
+
+# ── Benchmark artifacts ───────────────────────────────────────────────────────
+benchmarks/reports/step12a/initial_baseline_model.joblib
+benchmarks/reports/**/*.joblib
+benchmarks/reports/**/*.pkl
+
+# ── IDE / OS ──────────────────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ── Logs & temp ───────────────────────────────────────────────────────────────
+*.log
+logs/
+tmp/
+temp/
