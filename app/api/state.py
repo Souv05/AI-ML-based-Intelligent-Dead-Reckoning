@@ -66,7 +66,7 @@ def _download_file(url: str, dest: Path) -> None:
     if m:
         file_id = m.group(1)
         import gdown  # noqa: PLC0415  (runtime import — not a startup dep)
-        gdown.download(id=file_id, output=str(dest), quiet=False, fuzzy=True)
+        gdown.download(id=file_id, output=str(dest), quiet=False)
     else:
         urllib.request.urlretrieve(url, dest)
 
