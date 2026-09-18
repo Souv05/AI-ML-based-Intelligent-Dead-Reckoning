@@ -99,6 +99,13 @@ async def ws_navigation(ws: WebSocket) -> None:
     gru_speed: float = 0.0
     snapped: bool = False
 
+    # DR position hold: freeze lat/lon after 45 s of GNSS outage to prevent
+    # runaway drift (mirrors on_device_dr_service.dart behaviour).
+    _DR_HOLD_SECS   = 45.0
+    _last_gnss_time: float | None = None
+    _frozen_lat: float | None = None
+    _frozen_lon: float | None = None
+
     # ── GNSS hysteresis ───────────────────────────────────────────────────
     # Require N consecutive bad/good readings before switching mode.
     _GNSS_BAD_THRESH  = 5
@@ -227,6 +234,11 @@ async def ws_navigation(ws: WebSocket) -> None:
                     ekf.update_zupt()
 
                 if gnss_valid and (lat != 0.0 or lon != 0.0):
+                    # Record fix time and clear any frozen position
+                    _last_gnss_time = now
+                    _frozen_lat = None
+                    _frozen_lon = None
+
                     # Gap C: large-drift re-init — if EKF has drifted > 80 m from
                     # the incoming GPS fix, blending cannot recover gracefully.
                     # Re-initialise the EKF position from the GPS fix instead.
@@ -289,9 +301,23 @@ async def ws_navigation(ws: WebSocket) -> None:
             last_publish  = now
             sample_index += 1
 
+            # DR position hold: after 45 s of outage freeze position to last
+            # known good lat/lon so EKF heading drift doesn't walk off the map.
+            publish_lat = ekf.lat
+            publish_lon = ekf.lon
+            publish_pos_std = ekf.pos_std_m if math.isfinite(ekf.pos_std_m) else 999.0
+            if not gnss_valid and _last_gnss_time is not None:
+                if (now - _last_gnss_time) > _DR_HOLD_SECS:
+                    if _frozen_lat is None:
+                        _frozen_lat = ekf.lat
+                        _frozen_lon = ekf.lon
+                    publish_lat     = _frozen_lat
+                    publish_lon     = _frozen_lon
+                    publish_pos_std = 999.0
+
             await ws.send_text(json.dumps({
-                "lat":              ekf.lat,
-                "lon":              ekf.lon,
+                "lat":              publish_lat,
+                "lon":              publish_lon,
                 "east_m":           round(ekf.east_m,      2),
                 "north_m":          round(ekf.north_m,     2),
                 "speed_fwd":        round(ekf.speed_ms,    3),
@@ -300,7 +326,7 @@ async def ws_navigation(ws: WebSocket) -> None:
                 "mode":             mode,
                 "gnss_valid":       gnss_valid,
                 "gnss_health":      gnss_health,
-                "position_std_m":   round(ekf.pos_std_m if math.isfinite(ekf.pos_std_m) else 999.0, 1),
+                "position_std_m":   round(publish_pos_std, 1),
                 "map_matched":      snapped,
                 "sample_index":     sample_index,
                 "alignment":        aligner.as_dict(),
