@@ -112,8 +112,9 @@ async def export_graph(
 ) -> Response:
     """Export a radius-cropped routing graph as compact binary for on-device A*.
 
-    Only nodes within `radius_km` of the graph origin are exported, keeping
-    the download small (~5-15 MB for a 10 km radius in a dense urban area).
+    Reads nodes and edges directly from the SQLite road graph — no in-memory
+    arrays required. Only nodes within `radius_km` of the graph origin are
+    exported, keeping the download small.
 
     Binary format (little-endian):
       [8 bytes] float64  lat0
@@ -124,39 +125,57 @@ async def export_graph(
       [E*12 bytes]       uint32 from_node, uint32 to_node, float32 cost_m  per edge
     Returns 503 if the offline router is not ready yet.
     """
+    import sqlite3 as _sqlite3
+
     rr = state.road_router
     if rr is None:
         return Response(status_code=503, content=b"router not ready")
 
-    all_xy: np.ndarray = rr._node_xy   # (N_full, 2) float64: [east_m, north_m]
-    adj_full: list = rr._adj
-
-    # ── Crop to radius ────────────────────────────────────────────────────
     radius_m = radius_km * 1000.0
-    dist_sq  = all_xy[:, 0] ** 2 + all_xy[:, 1] ** 2
-    keep_mask = dist_sq <= radius_m ** 2
-    old_ids   = np.where(keep_mask)[0]
-    new_id    = np.full(len(all_xy), -1, dtype=np.int32)
-    new_id[old_ids] = np.arange(len(old_ids), dtype=np.int32)
+    con: _sqlite3.Connection = rr._con  # reuse the open read-only connection
 
-    node_xy_crop = all_xy[old_ids]   # (N_crop, 2)
-    N = len(node_xy_crop)
+    # ── Load nodes within radius ──────────────────────────────────────────
+    # nodes table: id INTEGER, x REAL (east_m), y REAL (north_m)
+    rows = con.execute(
+        "SELECT id, x, y FROM nodes WHERE (x * x + y * y) <= ?",
+        (radius_m ** 2,),
+    ).fetchall()
 
-    # ── Build cropped edge list ───────────────────────────────────────────
+    if not rows:
+        return Response(status_code=503, content=b"no nodes in radius")
+
+    # Map old node id → new sequential index
+    old_to_new: dict[int, int] = {}
+    node_x: list[float] = []
+    node_y: list[float] = []
+    for new_idx, (old_id, x, y) in enumerate(rows):
+        old_to_new[old_id] = new_idx
+        node_x.append(x)
+        node_y.append(y)
+    N = len(node_x)
+
+    # ── Load edges — fetch all, filter in Python to avoid SQLite var limit ─
+    # edges table: src INTEGER, dst INTEGER, cost REAL
+    edge_rows = con.execute("SELECT src, dst, cost FROM edges").fetchall()
+
+    # ── Serialise ─────────────────────────────────────────────────────────
     buf      = io.BytesIO()
     edge_buf = io.BytesIO()
+
     buf.write(struct.pack("<ddI", rr._lat0, rr._lon0, N))
-    buf.write(node_xy_crop.astype(np.float32).tobytes())
+    for x, y in zip(node_x, node_y):
+        # _recentre converts from graph-origin ENU to EKF-origin ENU
+        re_e, re_n = rr._recentre(x, y)
+        buf.write(struct.pack("<ff", re_e, re_n))
 
     E = 0
-    for old_frm in old_ids:
-        new_frm = int(new_id[old_frm])
-        for old_to, cost in adj_full[old_frm]:
-            new_to = int(new_id[old_to])
-            if new_to < 0:
-                continue
-            edge_buf.write(struct.pack("<IIf", new_frm, new_to, float(cost)))
-            E += 1
+    for frm, to, cost in edge_rows:
+        nf = old_to_new.get(frm, -1)
+        nt = old_to_new.get(to,  -1)
+        if nf < 0 or nt < 0:
+            continue
+        edge_buf.write(struct.pack("<IIf", nf, nt, float(cost)))
+        E += 1
 
     buf.write(struct.pack("<I", E))
     buf.write(edge_buf.getvalue())
