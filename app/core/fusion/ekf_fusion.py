@@ -48,6 +48,14 @@ _R_GNSS_SPD_M2S2   = 0.3 ** 2               # GNSS Doppler ±0.3 m/s
 _R_ZUPT_M2S2       = 0.05 ** 2              # ZUPT very tight
 _R_NHC_M2S2        = 0.1 ** 2               # NHC: lateral speed ≤ 0.1 m/s
 
+# ── Innovation gating (chi-squared) ──────────────────────────────────────────
+# Reject a GNSS measurement whose NIS = innovᵀ S⁻¹ innov exceeds the threshold.
+# χ²(2, 0.999) ≈ 13.8; using 25.0 matches 17E notebook and gives extra headroom
+# for genuine large GPS jumps that aren't multipath (e.g. tunnel exit).
+# Scalar heading gate: 3-sigma → NIS > 9.0 rejects an outlier GPS CoG reading.
+_GATE_CHI2_POS  = 25.0   # 2-DOF position gate
+_GATE_CHI2_HDG  = 9.0    # 1-DOF heading gate (3σ)
+
 
 class EKFFusion:
     """5-state EKF with explicit NHC for ground-vehicle dead reckoning."""
@@ -172,6 +180,17 @@ class EKFFusion:
         z = np.array([meas_east, meas_north])
         innov = z - H @ self.x
         R = np.diag([accuracy_m**2, accuracy_m**2])
+
+        # Chi-squared innovation gate: NIS = innovᵀ S⁻¹ innov
+        # Rejects multipath spikes / frozen fixes that slip past the health monitor.
+        S = H @ self.P @ H.T + R
+        try:
+            nis = float(innov @ np.linalg.inv(S) @ innov)
+        except np.linalg.LinAlgError:
+            nis = 0.0
+        if nis > _GATE_CHI2_POS:
+            return
+
         self._vector_update(H, innov, R)
         self._update_pos_std()
 
@@ -181,6 +200,10 @@ class EKFFusion:
             return
         H = np.array([[0.0, 0.0, 0.0, 0.0, 1.0]])
         innovation = _wrap_rad(heading_rad - self.x[4])
+        # 3-sigma scalar gate: rejects implausible CoG jumps
+        S = float(H @ self.P @ H.T) + _R_GPS_HDG_RAD2
+        if S > 0 and (innovation ** 2 / S) > _GATE_CHI2_HDG:
+            return
         self._scalar_update(H, innovation, _R_GPS_HDG_RAD2)
         self.x[4] = _wrap_rad(self.x[4])
         self._velocity_from_heading()
@@ -241,9 +264,11 @@ class EKFFusion:
         S = float(H @ self.P @ H.T) + R
         if S <= 0 or not math.isfinite(S):
             return
-        K = (self.P @ H.T) / S
-        self.x = self.x + K.flatten() * innovation
-        self.P = (np.eye(5) - K @ H) @ self.P
+        K = (self.P @ H.T) / S          # shape (5,1) or (5,)
+        k = K.flatten()
+        self.x = self.x + k * innovation
+        IKH = np.eye(5) - np.outer(k, H.flatten())
+        self.P = IKH @ self.P @ IKH.T + R * np.outer(k, k)
         self.P = 0.5 * (self.P + self.P.T)
         self._repair_P()
 
@@ -251,7 +276,8 @@ class EKFFusion:
         S = H @ self.P @ H.T + R
         K = self.P @ H.T @ np.linalg.inv(S)
         self.x = self.x + K @ innov
-        self.P = (np.eye(5) - K @ H) @ self.P
+        IKH = np.eye(5) - K @ H
+        self.P = IKH @ self.P @ IKH.T + K @ R @ K.T
         self.P = 0.5 * (self.P + self.P.T)
         self._repair_P()
 
