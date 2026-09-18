@@ -209,16 +209,21 @@ async def ws_navigation(ws: WebSocket) -> None:
             if ekf.initialised:
                 ekf.predict(heading_rad, gru_speed, dt)
                 ekf.update_imu_heading(heading_rad)
-                if result is not None:
-                    ekf.update_gru_speed(gru_speed)
 
-                # ZUPT: detect stationarity from raw IMU, NOT from GRU speed.
-                # GRU can output 5-6 m/s even on a stationary phone (model artefact).
+                # Stationarity check from IMU only — GRU outputs 5-8 m/s artefact at rest.
                 _acc_x, _acc_y, _acc_z = filtered[0], filtered[1], filtered[2]
                 _gyr_x, _gyr_y, _gyr_z = filtered[3], filtered[4], filtered[5]
                 _accel_mag = math.sqrt(_acc_x**2 + _acc_y**2 + _acc_z**2)
                 _gyro_mag  = math.sqrt(_gyr_x**2 + _gyr_y**2 + _gyr_z**2)
-                if abs(_accel_mag - 9.81) < 0.5 and _gyro_mag < 0.08:
+                # Looser gyro threshold (0.15) handles phones with noisy gyros at rest.
+                _imu_stationary = abs(_accel_mag - 9.81) < 0.5 and _gyro_mag < 0.15
+
+                # Only fuse GRU speed when IMU says the vehicle is moving.
+                # Skipping at rest prevents runaway speed build-up from GRU artefact.
+                if result is not None and not _imu_stationary:
+                    ekf.update_gru_speed(gru_speed)
+
+                if _imu_stationary:
                     ekf.update_zupt()
 
                 if gnss_valid and (lat != 0.0 or lon != 0.0):
@@ -295,7 +300,7 @@ async def ws_navigation(ws: WebSocket) -> None:
                 "mode":             mode,
                 "gnss_valid":       gnss_valid,
                 "gnss_health":      gnss_health,
-                "position_std_m":   round(ekf.pos_std_m,   1),
+                "position_std_m":   round(ekf.pos_std_m if math.isfinite(ekf.pos_std_m) else 999.0, 1),
                 "map_matched":      snapped,
                 "sample_index":     sample_index,
                 "alignment":        aligner.as_dict(),
