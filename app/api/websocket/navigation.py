@@ -109,7 +109,7 @@ async def ws_navigation(ws: WebSocket) -> None:
     # ── GNSS hysteresis ───────────────────────────────────────────────────
     # Require N consecutive bad/good readings before switching mode.
     _GNSS_BAD_THRESH  = 5
-    _GNSS_GOOD_THRESH = 3
+    _GNSS_GOOD_THRESH = 2
     _gnss_bad_streak  = 0
     _gnss_good_streak = 0
     _gnss_debounced   = False
@@ -187,11 +187,7 @@ async def ws_navigation(ws: WebSocket) -> None:
             gnss_acc     = max(float(msg.get("gnss_accuracy_m", 50)), 8.0)
             gnss_hdg_deg = float(msg.get("gnss_heading_deg", 0))
 
-            # Fix 2: detect reacquisition — inflate position noise for first 5 fixes
-            if gnss_valid and not _gnss_was_valid:
-                _reacq_fixes_left = 5
-            _gnss_was_valid = gnss_valid
-
+            was_initialised_before = ekf.initialised
             if not ekf.initialised and gnss_valid and (lat != 0.0 or lon != 0.0):
                 ekf.init_from_gnss(lat, lon, heading_deg, gnss_speed, gnss_acc)
 
@@ -212,6 +208,11 @@ async def ws_navigation(ws: WebSocket) -> None:
                         args=(ekf.lat0, ekf.lon0),
                         daemon=True,
                     ).start()
+
+            # Detect reacquisition edge: inflate position noise for 2 fixes ONLY if EKF was already warm
+            if gnss_valid and not _gnss_was_valid:
+                _reacq_fixes_left = 2 if was_initialised_before else 0
+            _gnss_was_valid = gnss_valid
 
             if ekf.initialised:
                 ekf.predict(heading_rad, gru_speed, dt)
