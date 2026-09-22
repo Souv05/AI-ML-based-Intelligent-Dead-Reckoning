@@ -77,7 +77,7 @@ Our system combines **IMU + AI velocity estimation + EKF + Non-Holonomic Constra
 | Real-time navigation engine          |        ✅       |
 | WebSocket navigation output          |        ✅       |
 | Flutter / ONNX                       |        ✅       |
-| Vehicle hardware                     |   🚧 ✅        |
+| Vehicle hardware                     |        ✅        |
 
 ---
 
