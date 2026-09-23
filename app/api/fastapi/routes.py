@@ -1,16 +1,17 @@
-"""HTTP endpoints: /health, /route, /graph."""
+"""HTTP endpoints: /health, /route, /graph, /download/map."""
 
 from __future__ import annotations
 
 import io
 import logging
 import math
+import os
 import struct
 
 import httpx
 import numpy as np
-from fastapi import APIRouter, Query
-from fastapi.responses import JSONResponse, Response
+from fastapi import APIRouter, HTTPException, Query
+from fastapi.responses import JSONResponse, Response, StreamingResponse
 
 from app.api import state
 
@@ -20,6 +21,29 @@ router = APIRouter()
 
 _OSRM_URL      = "http://router.project-osrm.org/route/v1/driving"
 _OSRM_TIMEOUT  = 5.0
+
+
+# ── /download/map ─────────────────────────────────────────────────────────────
+
+@router.get("/download/map")
+async def download_map() -> StreamingResponse:
+    """Stream map.mbtiles from the Google Drive URL in MAP_MBTILES_URL env var."""
+    url = os.environ.get("MAP_MBTILES_URL", "")
+    if not url:
+        raise HTTPException(status_code=503, detail="MAP_MBTILES_URL not configured")
+
+    async def _stream():
+        async with httpx.AsyncClient(timeout=None, follow_redirects=True) as client:
+            async with client.stream("GET", url) as r:
+                r.raise_for_status()
+                async for chunk in r.aiter_bytes(chunk_size=1024 * 1024):
+                    yield chunk
+
+    return StreamingResponse(
+        _stream(),
+        media_type="application/octet-stream",
+        headers={"Content-Disposition": "attachment; filename=map.mbtiles"},
+    )
 
 
 # ── /health ───────────────────────────────────────────────────────────────────
