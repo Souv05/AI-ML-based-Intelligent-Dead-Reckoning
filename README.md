@@ -1,106 +1,372 @@
-# SIH 2026 — ISRO Intelligent Dead Reckoning (PS 26168)
+# 🛰️ SIH 2026 — AI-ML Based Intelligent Dead Reckoning
 
-Two things live here:
+### ISRO Problem Statement — PS 26168
 
-1. **`src/data/` + `scripts/prepare_dataset.py`** — the IO-VNBD **data-preparation
-   pipeline** (inventory → verify sync → canonical schema → ENU reference →
-   GNSS-blackout mask → temporal windows → sequence-wise split → leakage check →
-   `data/processed/`). Produces a model-ready dataset. **No training.** See
-   [`DATA_PREP_REPORT.md`](DATA_PREP_REPORT.md) and `artifacts/`.
-2. **`src/iovnbd/` + `scripts/01-03`** — EDA/catalog and a synthetic
-   GNSS-blackout **drift benchmark** with a baseline non-holonomic
-   dead-reckoning engine, scored against ISRO's "< 10 % of distance" target.
-   See [`outputs/FINDINGS.md`](outputs/FINDINGS.md).
+<p align="center">
+
+**AI-Assisted • GNSS-Resilient • Real-Time Navigation**
+
+</p>
+
+> **Continuous navigation when GNSS becomes unavailable or unreliable.**
 
 ---
 
-## Data-prep pipeline (`src/data/`)
+## 🎯 Problem
 
-```bash
-python -m pytest -q tests/test_data_pipeline.py     # 13 checks
-python scripts/prepare_dataset.py                   # ~80 s; --quick for a subset
-```
+GNSS can fail in tunnels, urban canyons, dense infrastructure and GNSS-denied environments.
 
-| module | stage |
-|---|---|
-| `config.py` | every tunable (feature list, window, blackout, split) |
-| `inventory.py` | scan all 564 CSVs (cached) |
-| `loader.py` | raw + canonical frames, fail-loud on missing columns |
-| `synchronization.py` | discover + verify S/V pairs (smoothed speed corr @ lag 0) |
-| `coordinates.py` | lat/lon → local ENU metres |
-| `preprocessing.py` | aligned per-sequence timeline, drive-group split |
-| `blackout.py` | `native_gnss_valid` + engineered outage mask (inputs only) |
-| `windowing.py` | sliding windows, configurable target, gap-aware |
-| `validation.py` | quality flags + train/test leakage checks |
-| `plots.py` | 7 sensor figures for one drive |
+Pure inertial Dead Reckoning continues without GNSS, but **sensor errors accumulate and cause position drift**.
 
-Outputs: `artifacts/*` (12 docs + `plots/`), `data/interim/*.parquet`,
-`data/processed/{train,validation,test}/<seq>.parquet` + `<seq>_windows.npz`,
-`data/processed/manifest.csv`. Raw data under `dataset/IO-VNBD/` is never modified.
+### Objective
+
+**Maintain continuous positioning during GNSS outages while controlling drift and seamlessly recovering when GNSS returns.**
 
 ---
 
-## Drift-benchmark toolkit (`src/iovnbd/`)
+# 💡 Solution
 
-Robust loading, EDA, synthetic GNSS-blackout generation, a baseline
-non-holonomic dead-reckoning engine, and a drift benchmark scored against ISRO's
-"< 10 % of distance travelled" target.
+Our system combines **IMU + AI velocity estimation + EKF + Non-Holonomic Constraints + ZUPT + GNSS + map/road information**.
 
-## Layout
-
-```
-dataset/IO-VNBD/            real data (git lfs pull from github.com/onyekpeu/IO-VNBD)
-dataset/IO-VNBD-master/     original pointer-stub extraction (kept as fallback)
-src/iovnbd/
-  paths.py       dataset root + trip discovery
-  schema.py      raw header -> canonical column mapping (token-based, 2 phone layouts)
-  loader.py      PhoneLog / VehicleLog / Trip  (canonical units, common clock, ENU truth)
-  geo.py         lat/lon <-> local ENU, haversine, angle helpers
-  eda.py         per-trip summary, quality flags, IMU-coupling + truth-consistency metrics
-  align.py       phone -> vehicle orientation estimate (ISRO "orientation detection")
-  blackout.py    synthetic GNSS-outage windows + scenario presets
-  deadreckon.py  NHC dead-reckoning; pluggable speed_source / heading_source
-  metrics.py     drift metrics + ISRO pass/fail + aggregation
-  plots.py       matplotlib figures (headless)
-  harness.py     trips x scenarios x sources evaluation loop
-scripts/
-  01_build_catalog.py        -> outputs/catalog.csv, catalog_brief.md
-  02_eda_report.py           -> outputs/eda/*.png, summary.txt
-  03_run_drift_benchmark.py  -> outputs/benchmark/{detail,summary}.csv|md, *.png
-outputs/FINDINGS.md          consolidated results write-up
+```text
+                 IMU + GNSS
+                     │
+                     ▼
+             Filtering / Calibration
+                     │
+                     ▼
+                  GRU-v2
+             AI Speed Estimation
+                     │
+                     ▼
+                EKF + NHC
+                     │
+          ┌──────────┼──────────┐
+          ▼          ▼          ▼
+        GNSS        ZUPT      Map/Road
+          │          │          │
+          └──────────┼──────────┘
+                     ▼
+          Intelligent Navigation
 ```
 
-## Setup
+### Core principle
+
+> **AI estimates motion. Physics constrains motion. Sensor fusion produces the navigation solution.**
+
+---
+
+# ✅ Current Implementation
+
+| Module                               |     Status     |
+| ------------------------------------ | :------------: |
+| IO-VNBD data pipeline                |        ✅       |
+| ENU reference generation             |        ✅       |
+| GNSS blackout generation             |        ✅       |
+| Sequence-wise split & leakage checks |        ✅       |
+| Classical NHC Dead Reckoning         |        ✅       |
+| Drift benchmark                      |        ✅       |
+| GRU-v2 speed estimation              |        ✅       |
+| IMU filtering & calibration          |        ✅       |
+| EKF sensor fusion                    |        ✅       |
+| NHC                                  |        ✅       |
+| ZUPT                                 |        ✅       |
+| GNSS outage detection                |        ✅       |
+| GNSS re-acquisition                  |        ✅       |
+| Map / road-bearing assistance        |        ✅       |
+| Real-time navigation engine          |        ✅       |
+| WebSocket navigation output          |        ✅       |
+| Flutter / ONNX                       |        ✅       |
+| Vehicle hardware                     |        ✅        |
+
+---
+
+# 🧠 AI + Sensor Fusion
+
+### GRU-v2
+
+The current model estimates **forward speed from sequential IMU features**.
+
+```text
+IMU Sequence
+     ↓
+   GRU-v2
+     ↓
+Forward Speed
+     ↓
+    EKF
+```
+
+### EKF State
+
+```text
+X = [East, North, vEast, vNorth, Heading]
+```
+
+The filter combines:
+
+**IMU + GRU speed + GNSS + NHC + ZUPT + road bearing**
+
+to estimate the navigation state.
+
+---
+
+# 📡 GNSS → DR → GNSS
+
+The system supports controlled navigation-mode transitions:
+
+```text
+             GNSS HEALTH
+                  │
+        ┌─────────┴─────────┐
+        ▼                   ▼
+     HEALTHY             INVALID
+        │                   │
+        ▼                   ▼
+   GNSS-AIDED           DR-ACTIVE
+                            │
+                      IMU + AI + EKF
+                            │
+                       GNSS RETURNS
+                            ▼
+                    GNSS-REACQUIRE
+                            │
+                            ▼
+                       GNSS-AIDED
+```
+
+### Navigation modes
+
+`GNSS_AIDED` · `DR_ACTIVE` · `GNSS_REACQUIRE`
+
+---
+
+# 📊 IO-VNBD Data Foundation
+
+The original data pipeline prepares synchronized phone and vehicle data for modelling and evaluation.
+
+```text
+Inventory
+   ↓
+Synchronization
+   ↓
+Canonical Schema
+   ↓
+ENU Coordinates
+   ↓
+GNSS Blackout Mask
+   ↓
+Temporal Windows
+   ↓
+Sequence Split
+   ↓
+Leakage Check
+   ↓
+Processed Dataset
+```
+
+Raw data under `dataset/IO-VNBD/` is never modified.
+
+---
+
+# 🧪 Drift Benchmark
+
+The project includes a synthetic GNSS-blackout benchmark with a baseline **non-holonomic dead-reckoning engine**.
+
+```text
+Real Trip
+   ↓
+GNSS Blackout
+   ↓
+Dead Reckoning
+   ↓
+Position Drift
+   ↓
+Metrics
+```
+
+The benchmark evaluates performance against the stated ISRO target:
+
+> **Drift < 10% of distance travelled**
+
+---
+
+# 🚀 SIH Finale Upgrade Roadmap
+
+```text
+CURRENT SYSTEM
+      │
+      ▼
+🧠 Self-Aware Sensors
+Health • Bias • Adaptive Noise
+      │
+      ▼
+🤖 Next-Gen AI
+Velocity • Heading • Uncertainty
+      │
+      ▼
+🔗 Multi-Sensor Fusion
+Wheel • CAN • OBD-II • External IMU
+      │
+      ▼
+📡 GNSS Intelligence
+Quality • Anomaly • Predictive Outage
+      │
+      ▼
+🗺️ Context-Aware Navigation
+Map • Road • Motion Constraints
+      │
+      ▼
+⚡ Edge Autonomy
+On-Device • Low Latency • Offline
+      │
+      ▼
+🚗 Vehicle Deployment
+Android • ESP32 • CAN • ROS 2
+```
+
+---
+
+# 🔮 Planned Features
+
+| Upgrade                              | Goal                         |
+| ------------------------------------ | ---------------------------- |
+| 🧠 Sensor health & adaptive fusion   | Improve reliability          |
+| 🤖 Multi-task AI + uncertainty       | Improve estimation           |
+| 🔗 CAN / OBD-II / wheel-speed fusion | Vehicle-grade sensing        |
+| 📡 GNSS anomaly detection            | Better GNSS trust management |
+| 🗺️ Advanced map/context constraints | Reduce drift                 |
+| ⚡ On-device optimization             | Offline real-time operation  |
+| 🚗 Physical vehicle validation       | Real-world deployment        |
+
+---
+
+# 🏆 Why This Approach
+
+### **AI-Assisted**
+
+Learns motion information from sequential IMU data.
+
+### **Physics-Constrained**
+
+Uses EKF, NHC and ZUPT rather than relying solely on AI.
+
+### **GNSS-Resilient**
+
+Continues navigation during GNSS outages.
+
+### **Real-Time**
+
+Designed around continuous navigation output.
+
+### **Scalable**
+
+Sensor adapters allow future vehicle sensors without redesigning the navigation core.
+
+---
+
+# 📈 Validation
+
+| Scenario            | Measure                  |
+| ------------------- | ------------------------ |
+| 🟢 GNSS Available   | Baseline navigation      |
+| 🔴 GNSS Blackout    | Position drift           |
+| 🟡 GNSS Degradation | Mode switching           |
+| 🔄 GNSS Recovery    | Re-acquisition           |
+| ⚡ Real-Time         | Latency / resource usage |
+
+### Key metrics
+
+**Position Error · Drift Rate · Velocity Error · Heading Error · Re-acquisition Error · Inference Latency**
+
+---
+
+# 🛠️ Technology Stack
+
+```text
+AI/ML        → Python • PyTorch • GRU • ONNX • NumPy
+Navigation   → EKF • Dead Reckoning • NHC • ZUPT
+Sensors      → IMU • GNSS
+Real-Time    → Python • WebSocket
+Edge         → Flutter • ONNX Runtime
+Future       → CAN • OBD-II • ESP32 • Camera/VIO • ROS 2
+```
+
+---
+
+# 📂 Repository
+
+```text
+AI-ML-based-Intelligent-Dead-Reckoning/
+│
+├── dataset/
+├── src/
+│   ├── data/
+│   └── iovnbd/
+├── scripts/
+├── tests/
+├── artifacts/
+├── outputs/
+├── data/
+├── DATA_PREP_REPORT.md
+├── requirements.txt
+└── README.md
+```
+
+---
+
+# ⚡ Quick Start
 
 ```bash
+git clone https://github.com/Devnil434/AI-ML-based-Intelligent-Dead-Reckoning.git
+cd AI-ML-based-Intelligent-Dead-Reckoning
 python -m pip install -r requirements.txt
-# dataset (once): from dataset/  ->
-#   $env:GIT_LFS_SKIP_SMUDGE=1; git clone https://github.com/onyekpeu/IO-VNBD.git IO-VNBD
-#   git -C IO-VNBD lfs pull --include="*.csv,*.JPG"
 ```
 
-Point elsewhere with `IOVNBD_ROOT=/path/to/IO-VNBD`.
+### Data preparation
 
-## Canonical signals
+```bash
+python -m pytest -q tests/test_data_pipeline.py
+python scripts/prepare_dataset.py
+```
 
-`Trip.phone.df` : `t, lat, lon, alt_m, gps_speed_ms, gps_acc_m, gps_course_deg,
-gps_sats, acc_{x,y,z}, grav_{x,y,z}, gyro_{x,y,z}, mag_{x,y,z},
-ori_{yaw,pitch,roll}`
+### Drift benchmark
 
-`Trip.vehicle.df` : `t, lat, lon, vel_kmh, heading_deg, height_m, dt_s,
-steer_deg, ws_{fl,fr,rl,rr}, yaw_rate_dps, ind_speed_kmh, acc_long_g,
-acc_lat_g, engine_rpm, brake_psi, …`
+```bash
+python scripts/01_build_catalog.py
+python scripts/02_eda_report.py
+python scripts/03_run_drift_benchmark.py
+```
 
-`Trip` also carries row-aligned `east_m, north_m, dist_m` (ENU truth, origin =
-first vehicle fix) and a common `t` (s from 0).
+---
 
-## Dead-reckoning sources
+# 🏁 Final Vision
 
-speed  : `truth | hold | gps_decay | imu_integrate | obd | wheel_speed` or a
-`callable(trip, slice, ctx) -> np.ndarray[m/s]`
-heading: `truth | gps_hold | gyro | imu_aligned | veh_yawrate` or a callable.
+```text
+             TODAY
+               │
+      IMU + GRU + EKF + NHC
+               │
+               ▼
+       GNSS-RESILIENT DR
+               │
+               ▼
+            FUTURE
+               │
+       Multi-Sensor + AI
+               │
+               ▼
+       GNSS-Resilient
+               │
+               ▼
+        Edge Autonomy
+               │
+               ▼
+       Vehicle Deployment
+```
 
-An ML speed/heading model is dropped in as the callable — see
-`outputs/FINDINGS.md` §5.
+> ## 🚀 From AI-assisted Dead Reckoning to a resilient, multi-sensor intelligent navigation platform.
 
-See `outputs/FINDINGS.md` for dataset quirks and baseline results.
+### 🇮🇳 Smart India Hackathon 2026
+
+**ISRO PS 26168**
